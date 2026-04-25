@@ -1,0 +1,18 @@
+# Statistical view is not completely invalid, serves as a semantic approximation to relativize ideas
+# The issue is that each word has its categorical properties only very loosely approximated by learned relative grammar
+# Factual error in mixing up homophone contexts, modern llms do not do this as this is the purpose of the attn mechanism
+# Natural language and data ontology parser is still an open problem, likely related to causal analysis
+# There is academic & publication value here 
+
+
+# Surveys of approaches for learning and applying causal structures to and from data:
+file:///Users/Michaellee/Documents/Knowledge/Applied%20Math/Learning%20Causality%20with%20Data.pdf
+file:///Users/Michaellee/Documents/Knowledge/Applied%20Math/Methods%20and%20Tools%20for%20Causal%20Discovery%20and%20Inference.pdf
+
+# Prior work to arrive at the current SOTA semantic representation methods:
+file:///Users/Michaellee/Documents/Knowledge/Applied%20Math/Efficient%20Estimation%20of%20Word%20Representations%20in%20Vector%20Space.pdf
+file:///Users/Michaellee/Documents/Knowledge/Applied%20Math/RAND-WALK-%20A%20latent%20variable%20model%20approach%20to%20word%20embeddings.pdf
+file:///Users/Michaellee/Documents/Knowledge/Applied%20Math/semantic_tokenization.pdf
+
+# Category theory reference, with a focus on applications to ontologies:
+file:///Users/Michaellee/Documents/Knowledge/Applied%20Math/Category%20Theory%20for%20the%20Sciences.pdf

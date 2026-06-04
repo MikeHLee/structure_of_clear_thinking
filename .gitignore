@@ -72,3 +72,6 @@ logs/
 tmp/
 temp/
 *.tmp
+
+# internal coordination trail — keep private
+.swarm/

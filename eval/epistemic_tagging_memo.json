@@ -1,0 +1,19 @@
+{
+  "source": "investment-reasoning memo (Claude-generated), shared 2026-06-03",
+  "description": "Gold epistemic-status labels for the 'pretend everything is fine until the private paper is offloaded' market memo. Serves as the first target/eval case for the SCT epistemic-tagging guard, extending gated generation from formal languages to conceptual claims. The memo's own behaviour is the gold standard: the SUPPLY half is sourced and assertable; the COORDINATION/INTENT claim is unfalsifiable and must be reframed, not asserted.",
+  "axes": {
+    "supply": "the inventory-of-private-paper half (sourceable market facts)",
+    "intent": "the allocator-coordination half (claims about hidden intent)"
+  },
+  "claims": [
+    {"text": "SpaceX S-1 filed 2026-05-20, ~$1.75-2T valuation, ~$75-80B raise, listing ~June 12", "gold": "SOURCED", "axis": "supply"},
+    {"text": "OpenAI Q4 raise, ~$1T valuation, ~$60B", "gold": "SOURCED", "axis": "supply"},
+    {"text": "Anthropic ~Oct, ~$900B valuation, ~$60B", "gold": "SOURCED", "axis": "supply"},
+    {"text": "Combined >$200B of issuance vs a $45B total 2025 US IPO market", "gold": "SOURCED", "axis": "supply"},
+    {"text": "EA $55B LBO ($20B debt, largest non-IG commitment ever)", "gold": "SOURCED", "axis": "supply"},
+    {"text": "$17.9B+ AI/data-center junk issuance YTD 2026", "gold": "SOURCED", "axis": "supply"},
+    {"text": "There is a vast inventory of private paper that needs a calm tape to be sold into", "gold": "FALSIFIABLE_UNSOURCED", "axis": "supply", "note": "directional inference licensed by the sourced supply facts, but itself unsourced"},
+    {"text": "Allocators are coordinating a 'hold the line' pattern", "gold": "UNFALSIFIABLE", "axis": "intent", "note": "hidden coordination; no possible public evidence could settle it"},
+    {"text": "Issuers/underwriters/PE sponsors are individually incentivized to keep the tape orderly into their own exits", "gold": "SOURCED", "axis": "intent", "note": "the structural-incentive reframe that replaces the unfalsifiable coordination claim"}
+  ]
+}

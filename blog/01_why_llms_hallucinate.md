@@ -58,7 +58,7 @@ Just because you can write "Customer creates Order" doesn't mean it's true. The 
 
 ### Ologs: Categories for Knowledge
 
-An **Olog** (Ontology Log) is a category-theoretic knowledge representation. Unlike a knowledge graph that stores *facts*, an Olog encodes *constraints* on valid compositions.
+An **Olog** (Ontology Log) is a category-theoretic knowledge representation introduced by [Spivak and Kent (2012)](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0024274). Unlike a knowledge graph that stores *facts*, an Olog encodes *constraints* on valid compositions.
 
 Here's our e-commerce Olog:
 
@@ -267,8 +267,8 @@ This blog introduced the *what* and *why*. Coming up:
 ## Try It Yourself
 
 ```bash
-git clone https://github.com/MikeHLee/ai_research
-cd ai_research/topics/ontological_induction_sequence_modeling
+git clone https://github.com/oasis-main/alignment_research
+cd alignment_research/tlts_compilation
 
 # Install dependencies
 python -m venv venv && source venv/bin/activate

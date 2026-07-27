@@ -34,9 +34,28 @@ training_data/
 *.html
 *.mhtml
 
-# Results / outputs (reproducible from code)
-results/
+# Results / outputs (reproducible from code) — headline artifacts checked in explicitly
+results/*
+!results/week4_evaluation_report.md
+!results/attention_ablation.json
+!results/attention_ablation_v2.json
+!results/attention_ablation.png
+!results/attention_ablation_v2.png
 __pycache__/
+
+# LaTeX build artifacts (papers/)
+*.aux
+*.out
+*.bbl
+*.blg
+*.synctex.gz
+*.dtx
+*.ins
+papers/nesy_submission/template/
+papers/nesy_submission/*.zip
+
+# Unrelated side-project kept out of the public repo
+AMG_Valuation/
 
 # IDE
 .vscode/

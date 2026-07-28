@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+"""Modal runner for the constraint-aware fine-tuning experiment.
+
+SOGB pathway: CPU smoke FIRST (it exercises the identical code path and
+has repeatedly caught bugs a GPU run would have hidden), then L4.
+
+    modal run scripts/modal_constraint_ft.py::smoke
+    modal run --detach scripts/modal_constraint_ft.py::train_l4
+    modal run scripts/modal_constraint_ft.py::download
+
+Results land in the 'sct-constraint-ft' Volume; `download` copies the
+JSON to results/constraint_ft_results.json for the thread-03 figures.
+"""
+
+import os
+
+import modal
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+PTVM = os.path.join(HERE, "..", "Percepta_Transformer_VM")
+
+app = modal.App("sct-constraint-ft")
+vol = modal.Volume.from_name("sct-constraint-ft", create_if_missing=True)
+
+image = (
+    modal.Image.debian_slim(python_version="3.12")
+    .pip_install("torch", "transformers", "peft", "accelerate", "numpy")
+    .add_local_dir(PTVM, remote_path="/root/ptvm")
+)
+
+RESULTS_DIR = "/results"
+
+
+def _run(model_name, out_name, **kwargs):
+    import sys
+    sys.path.insert(0, "/root/ptvm")
+    from experiment_constraint_ft import run
+    out = os.path.join(RESULTS_DIR, out_name)
+    res = run(model_name, out, **kwargs)
+    vol.commit()
+    return {k: res[k] for k in ("model_name", "kl_per_step", "logp_enforced",
+                                "soundness_enforcer_off", "config")}
+
+
+@app.function(image=image, cpu=8, memory=16384, timeout=3600,
+              volumes={RESULTS_DIR: vol})
+def smoke():
+    """Tiny model, tiny counts — proves the full code path end to end."""
+    return _run("HuggingFaceTB/SmolLM2-135M", "smoke_results.json",
+                train_steps=30, eval_every=15, batch_size=4,
+                n_train_traj=48, n_eval_traj=12, n_soundness_traj=25)
+
+
+@app.function(image=image, gpu="L4", timeout=4 * 3600,
+              volumes={RESULTS_DIR: vol})
+def train_l4():
+    """Qwen2.5-1.5B, full run. ~L4-sized; detach and check back."""
+    return _run("Qwen/Qwen2.5-1.5B", "constraint_ft_results.json",
+                train_steps=2000, eval_every=250, batch_size=8,
+                n_train_traj=512, n_eval_traj=100, n_soundness_traj=300)
+
+
+@app.function(image=image, volumes={RESULTS_DIR: vol})
+def _read(name: str) -> str:
+    with open(os.path.join(RESULTS_DIR, name)) as f:
+        return f.read()
+
+
+@app.local_entrypoint()
+def download(name: str = "constraint_ft_results.json"):
+    data = _read.remote(name)
+    dest = os.path.join(HERE, "..", "results", name)
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    with open(dest, "w") as f:
+        f.write(data)
+    print(f"wrote {dest}")

@@ -107,6 +107,7 @@ structure_of_clear_thinking/
 │   ├── modal_olog_training.py    #   Modal GPU: attention experiments
 │   └── modal_olog_finetune.py    #   Modal GPU: olog-generation fine-tuning
 │
+├── threads/                      # X/Twitter thread series (copy + reproducible figures)
 ├── tests/                        # Unit + behavioral tests
 ├── results/                      # Headline artifacts (ablation JSON/figures, reports)
 ├── docs/                         # Architecture, evaluation, strategy, design notes
@@ -142,6 +143,7 @@ GPU experiments (HDC/Sheaf training, fine-tuning) run on [Modal](https://modal.c
 
 - **Paper**: *TLTS-Compilation: A Neurosymbolic Framework for Type-Safe and Verifiable Transformers* — NeSy 2026 (see `papers/nesy_submission/SUBMISSION_METADATA.md`)
 - **Blog series** (`blog/`): 0 — Structure of Clear Thinking · 1 — Why Your LLM Hallucinates · 2 — Attention, But Make It Type-Safe · 3 — From Proofs to Programs to… Text? · 4 — Building an Auditable AI · 5 — Compiling Programs into Attention
+- **X thread series** (`threads/`): accessible result write-ups with self-contained figures — see [threads/README.md](threads/README.md) for the series plan
 - **Key docs**: [ARCHITECTURE.md](docs/ARCHITECTURE.md) · [PUBLICATION_STRATEGY.md](docs/PUBLICATION_STRATEGY.md) · [EPISTEMIC_STATUS_BRIDGE.md](docs/EPISTEMIC_STATUS_BRIDGE.md) · [FINETUNING_STRATEGY.md](docs/FINETUNING_STRATEGY.md)
 
 ## Related Series

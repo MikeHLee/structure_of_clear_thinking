@@ -109,9 +109,11 @@ def _run_gen(model_name, out_name, holdouts=HOLDOUTS, **kwargs):
 def smoke_generalization():
     """Tiny model, tiny counts, full merged graph — proves the split logic
     (region separation, contamination check, chunked scoring) before GPU."""
+    # 357-label scoring is ~6 chunk-forwards per step on CPU — counts must
+    # stay tiny or the smoke hits its own timeout (learned 2026-07-29).
     return _run_gen("HuggingFaceTB/SmolLM2-135M", "smoke_gen_results.json",
-                    train_steps=10, eval_every=5, batch_size=4,
-                    n_train_traj=12, n_eval_traj=4, n_soundness_traj=10)
+                    train_steps=4, eval_every=2, batch_size=4,
+                    n_train_traj=6, n_eval_traj=3, n_soundness_traj=6)
 
 
 @app.function(image=image, gpu="L4", timeout=3 * 3600,

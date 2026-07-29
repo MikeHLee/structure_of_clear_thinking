@@ -19,6 +19,9 @@ import modal
 HERE = os.path.dirname(os.path.abspath(__file__))
 PTVM = os.path.join(HERE, "..", "Percepta_Transformer_VM")
 
+ONTOLOGIES = os.path.join(HERE, "..", "training_data", "Text2KGBench",
+                          "data", "dbpedia_webnlg", "ontologies")
+
 app = modal.App("sct-constraint-ft")
 vol = modal.Volume.from_name("sct-constraint-ft", create_if_missing=True)
 
@@ -26,6 +29,7 @@ image = (
     modal.Image.debian_slim(python_version="3.12")
     .pip_install("torch", "transformers", "peft", "accelerate", "numpy")
     .add_local_dir(PTVM, remote_path="/root/ptvm")
+    .add_local_dir(ONTOLOGIES, remote_path="/root/ontologies")
 )
 
 RESULTS_DIR = "/results"
@@ -58,6 +62,31 @@ def train_l4():
     return _run("Qwen/Qwen2.5-1.5B", "constraint_ft_results.json",
                 train_steps=2000, eval_every=250, batch_size=8,
                 n_train_traj=512, n_eval_traj=100, n_soundness_traj=300)
+
+
+@app.function(image=image, cpu=8, memory=16384, timeout=3600,
+              volumes={RESULTS_DIR: vol})
+def smoke_ontology(ontology_file: str = "1_university_ontology.json"):
+    """Tiny model on a REAL ontology — proves the batched-scoring +
+    random-start path before paying for GPU."""
+    return _run("HuggingFaceTB/SmolLM2-135M",
+                f"smoke_ont_{ontology_file.split('_')[1]}.json",
+                train_steps=20, eval_every=10, batch_size=4,
+                n_train_traj=24, n_eval_traj=8, n_soundness_traj=15,
+                ontology_path=f"/root/ontologies/{ontology_file}")
+
+
+@app.function(image=image, gpu="L4", timeout=2 * 3600,
+              volumes={RESULTS_DIR: vol})
+def train_ontology(ontology_file: str = "1_university_ontology.json"):
+    """Qwen2.5-1.5B on a real Text2KGBench ontology. Cost-tuned config:
+    convergence lessons from the e-commerce run (done by step 250) plus
+    batched label scoring keep this ~$0.25-0.50 per ontology."""
+    slug = os.path.splitext(ontology_file)[0]
+    return _run("Qwen/Qwen2.5-1.5B", f"constraint_ft_{slug}.json",
+                train_steps=500, eval_every=50, batch_size=8,
+                n_train_traj=256, n_eval_traj=50, n_soundness_traj=150,
+                ontology_path=f"/root/ontologies/{ontology_file}")
 
 
 @app.function(image=image, volumes={RESULTS_DIR: vol})

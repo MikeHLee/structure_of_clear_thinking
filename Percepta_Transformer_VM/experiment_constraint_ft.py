@@ -52,6 +52,49 @@ from experiment_loci_comparison import TLTS, cyclic_ecommerce_tlts  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
+# Real ontologies (Text2KGBench) as TLTSs
+# ---------------------------------------------------------------------------
+
+def tlts_from_text2kg(json_path: str) -> Tuple[TLTS, dict]:
+    """Build a TLTS from a Text2KGBench ontology JSON.
+
+    Each relation entry (pid, domain, range) becomes a rule
+    (domain, pid, range). TLTS is a deterministic labeled transition
+    system — one successor per (type, label) — so duplicate
+    (domain, pid) pairs keep their first occurrence; the count of
+    dropped duplicates is reported in the info dict.
+    """
+    with open(json_path) as f:
+        d = json.load(f)
+    delta: List[Tuple[str, str, str]] = []
+    seen = set()
+    dropped = 0
+    for r in d.get("relations", []):
+        dom, pid, rng = r.get("domain"), r.get("pid"), r.get("range")
+        if not (dom and pid and rng):
+            continue
+        if (dom, pid) in seen:
+            dropped += 1
+            continue
+        seen.add((dom, pid))
+        delta.append((dom, pid, rng))
+    types = sorted({c["qid"] for c in d.get("concepts", [])}
+                   | {t for t, _, _ in delta} | {t for _, _, t in delta})
+    labels = sorted({l for _, l, _ in delta})
+    tlts = TLTS(types=types, labels=labels, delta=delta)
+    info = {"ontology_id": d.get("id", os.path.basename(json_path)),
+            "title": d.get("title", ""), "n_types": len(types),
+            "n_labels": len(labels), "n_rules": len(delta),
+            "dropped_duplicate_domain_pid": dropped}
+    return tlts, info
+
+
+def start_states(tlts: TLTS) -> List[str]:
+    """Types with at least one outgoing rule — trajectory start candidates."""
+    return [t for t in tlts.types if tlts.admissible_from(t)]
+
+
+# ---------------------------------------------------------------------------
 # Serialization
 # ---------------------------------------------------------------------------
 
@@ -100,24 +143,35 @@ class LMPrior:
     # -- scoring ------------------------------------------------------------
     def label_dist(self, prefix: str, labels: List[str]) -> Dict[str, float]:
         """p(label | prefix) over the candidate set, from summed token logprobs
-        of the continuation ' -{label}->'."""
+        of the continuation ' -{label}->'. All candidates are scored in ONE
+        padded batch forward — with real ontologies (40–70 labels) the
+        sequential version dominated wall time."""
         torch = self.torch
-        scores = []
-        prefix_ids = self.tokenizer(prefix, return_tensors="pt").input_ids
+        prefix_ids = self.tokenizer(prefix, return_tensors="pt").input_ids[0]
+        P = prefix_ids.shape[0]
+        cont_ids = [self.tokenizer(f" -{l}->", add_special_tokens=False,
+                                   return_tensors="pt").input_ids[0]
+                    for l in labels]
+        lens = [c.shape[0] for c in cont_ids]
+        Lmax = P + max(lens)
+        pad = self.tokenizer.pad_token_id
+        batch = torch.full((len(labels), Lmax), pad, dtype=torch.long)
+        mask = torch.zeros((len(labels), Lmax), dtype=torch.long)
+        for i, c in enumerate(cont_ids):
+            L = P + c.shape[0]
+            batch[i, :P] = prefix_ids
+            batch[i, P:L] = c
+            mask[i, :L] = 1
+        batch, mask = batch.to(self.device), mask.to(self.device)
         with torch.no_grad():
-            for label in labels:
-                cont = f" -{label}->"
-                cont_ids = self.tokenizer(cont, add_special_tokens=False,
-                                          return_tensors="pt").input_ids
-                ids = torch.cat([prefix_ids, cont_ids], dim=1).to(self.device)
-                logits = self.model(ids).logits[0]
-                logprobs = torch.log_softmax(logits.float(), dim=-1)
-                total = 0.0
-                start = prefix_ids.shape[1]
-                for i in range(cont_ids.shape[1]):
-                    tok = ids[0, start + i]
-                    total += logprobs[start + i - 1, tok].item()
-                scores.append(total)
+            logits = self.model(input_ids=batch, attention_mask=mask).logits
+            logprobs = torch.log_softmax(logits.float(), dim=-1)
+        scores = []
+        for i, c in enumerate(cont_ids):
+            s = 0.0
+            for j in range(c.shape[0]):
+                s += logprobs[i, P + j - 1, batch[i, P + j]].item()
+            scores.append(s)
         m = max(scores)
         exps = [math.exp(s - m) for s in scores]
         z = sum(exps)
@@ -170,35 +224,39 @@ class EvalResult:
     mean_logp_masked: float
 
 
-def gen_enforced(prior, tlts: TLTS, rng, max_len: int = 12) -> Tuple[str, List[Tuple[str, str]]]:
+def gen_enforced(prior, tlts: TLTS, rng, max_len: int = 12,
+                 starts: Optional[List[str]] = None) -> Tuple[str, List[Tuple[str, str]]]:
     """(D) pre-decoder enforcement: mask to admissible labels, renormalize."""
-    t = "Customer"
+    start = rng.choice(starts) if starts else "Customer"
+    t = start
     steps: List[Tuple[str, str]] = []
     for _ in range(max_len):
         adm = tlts.admissible_from(t)
         if not adm:
             break
-        dist = prior.label_dist(serialize("Customer", steps), tlts.labels)
+        dist = prior.label_dist(serialize(start, steps), tlts.labels)
         masked = {l: dist[l] for l in adm}
         z = sum(masked.values())
         masked = {l: p / z for l, p in masked.items()}
         label = rng.choices(list(masked), weights=list(masked.values()))[0]
         t = adm[label]
         steps.append((label, t))
-    return serialize("Customer", steps), steps
+    return serialize(start, steps), steps
 
 
-def evaluate(prior, tlts: TLTS, n: int, rng, max_len: int = 12) -> EvalResult:
+def evaluate(prior, tlts: TLTS, n: int, rng, max_len: int = 12,
+             starts: Optional[List[str]] = None) -> EvalResult:
     kls, logps_raw, logps_masked = [], [], []
     for _ in range(n):
-        t = "Customer"
+        start = rng.choice(starts) if starts else "Customer"
+        t = start
         steps: List[Tuple[str, str]] = []
         lp_raw = lp_masked = 0.0
         while len(steps) < max_len:
             adm = tlts.admissible_from(t)
             if not adm:
                 break
-            dist = prior.label_dist(serialize("Customer", steps), tlts.labels)
+            dist = prior.label_dist(serialize(start, steps), tlts.labels)
             masked = {l: dist[l] for l in adm}
             z = sum(masked.values())
             masked = {l: p / z for l, p in masked.items()}
@@ -218,19 +276,21 @@ def evaluate(prior, tlts: TLTS, n: int, rng, max_len: int = 12) -> EvalResult:
     )
 
 
-def soundness_off(prior, tlts: TLTS, n: int, rng, max_len: int = 12) -> float:
+def soundness_off(prior, tlts: TLTS, n: int, rng, max_len: int = 12,
+                  starts: Optional[List[str]] = None) -> float:
     """Enforcer OFF: sample from the raw label distribution; a trajectory is
     sound iff every sampled label is admissible from its state."""
     ok = 0
     for _ in range(n):
-        t = "Customer"
+        start = rng.choice(starts) if starts else "Customer"
+        t = start
         steps: List[Tuple[str, str]] = []
         sound = True
         while len(steps) < max_len:
             adm = tlts.admissible_from(t)
             if not adm:
                 break
-            dist = prior.label_dist(serialize("Customer", steps), tlts.labels)
+            dist = prior.label_dist(serialize(start, steps), tlts.labels)
             label = rng.choices(list(dist), weights=list(dist.values()))[0]
             if label not in adm:
                 sound = False
@@ -248,24 +308,35 @@ def soundness_off(prior, tlts: TLTS, n: int, rng, max_len: int = 12) -> float:
 def run(model_name: str, out_path: str, train_steps: int = 2000,
         eval_every: int = 250, batch_size: int = 8, n_train_traj: int = 512,
         n_eval_traj: int = 100, n_soundness_traj: int = 300,
-        seed: int = 42, fake: bool = False) -> dict:
+        seed: int = 42, fake: bool = False,
+        ontology_path: Optional[str] = None) -> dict:
     import random
     rng = random.Random(seed)
-    tlts = cyclic_ecommerce_tlts()
+    if ontology_path:
+        tlts, ont_info = tlts_from_text2kg(ontology_path)
+        starts = start_states(tlts)
+        domain = (f"{ont_info['title'] or ont_info['ontology_id']} "
+                  f"({ont_info['n_types']} types, {ont_info['n_rules']} rules)")
+        print(f"ontology: {json.dumps(ont_info)}", flush=True)
+    else:
+        tlts, ont_info = cyclic_ecommerce_tlts(), None
+        starts = None
+        domain = "7-type cyclic e-commerce ontology"
 
     t0 = time.time()
     prior = FakePrior(tlts, seed) if fake else LMPrior(model_name)
     print(f"[{time.time()-t0:.0f}s] model loaded: {model_name}", flush=True)
 
     # baseline eval + enforcer-off soundness
-    ev0 = evaluate(prior, tlts, n_eval_traj, rng)
-    s_off_before = soundness_off(prior, tlts, n_soundness_traj, rng)
+    ev0 = evaluate(prior, tlts, n_eval_traj, rng, starts=starts)
+    s_off_before = soundness_off(prior, tlts, n_soundness_traj, rng, starts=starts)
     print(f"[{time.time()-t0:.0f}s] baseline: KL/step {ev0.mean_kl_per_step:.3f}, "
           f"logp {ev0.mean_logp_enforced:.3f}, off-soundness {s_off_before:.1f}%",
           flush=True)
 
     # training corpus: the model's own enforced outputs
-    corpus = [gen_enforced(prior, tlts, rng)[0] for _ in range(n_train_traj)]
+    corpus = [gen_enforced(prior, tlts, rng, starts=starts)[0]
+              for _ in range(n_train_traj)]
     print(f"[{time.time()-t0:.0f}s] corpus: {n_train_traj} enforced trajectories",
           flush=True)
 
@@ -278,7 +349,7 @@ def run(model_name: str, out_path: str, train_steps: int = 2000,
         batch = rng.sample(corpus, min(batch_size, len(corpus)))
         loss = prior.train_step(batch)
         if step % eval_every == 0 or step == train_steps:
-            ev = evaluate(prior, tlts, n_eval_traj, rng)
+            ev = evaluate(prior, tlts, n_eval_traj, rng, starts=starts)
             steps_axis.append(step)
             kl_series.append(ev.mean_kl_per_step)
             logp_series.append(ev.mean_logp_enforced)
@@ -287,13 +358,14 @@ def run(model_name: str, out_path: str, train_steps: int = 2000,
                   f"KL/step {ev.mean_kl_per_step:.3f}, "
                   f"logp {ev.mean_logp_enforced:.3f}", flush=True)
 
-    s_off_after = soundness_off(prior, tlts, n_soundness_traj, rng)
+    s_off_after = soundness_off(prior, tlts, n_soundness_traj, rng, starts=starts)
     print(f"[{time.time()-t0:.0f}s] final off-soundness {s_off_after:.1f}%",
           flush=True)
 
     results = {
         "model_name": model_name if not fake else "FAKE (logic test)",
-        "domain": "7-type cyclic e-commerce ontology",
+        "domain": domain,
+        "ontology_info": ont_info,
         "steps": steps_axis,
         "kl_per_step": kl_series,
         "logp_enforced": logp_series,
@@ -325,17 +397,20 @@ def main():
                    help="tiny model + tiny counts (CPU-friendly)")
     p.add_argument("--fake", action="store_true",
                    help="no-torch logic test with a synthetic prior")
+    p.add_argument("--ontology", default=None,
+                   help="path to a Text2KGBench ontology JSON (real domain)")
     args = p.parse_args()
 
     if args.fake:
         run("FAKE", args.out, train_steps=4, eval_every=2, batch_size=4,
-            n_train_traj=16, n_eval_traj=50, n_soundness_traj=200, fake=True)
+            n_train_traj=16, n_eval_traj=50, n_soundness_traj=200, fake=True,
+            ontology_path=args.ontology)
     elif args.smoke:
         run("HuggingFaceTB/SmolLM2-135M", args.out, train_steps=30,
             eval_every=15, batch_size=4, n_train_traj=48, n_eval_traj=12,
-            n_soundness_traj=25)
+            n_soundness_traj=25, ontology_path=args.ontology)
     else:
-        run(args.model, args.out)
+        run(args.model, args.out, ontology_path=args.ontology)
 
 
 if __name__ == "__main__":

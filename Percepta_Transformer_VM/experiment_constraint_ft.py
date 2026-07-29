@@ -94,6 +94,67 @@ def start_states(tlts: TLTS) -> List[str]:
     return [t for t in tlts.types if tlts.admissible_from(t)]
 
 
+def tlts_merged_text2kg(ontology_dir: str,
+                        holdout_files: Optional[List[str]] = None
+                        ) -> Tuple[TLTS, TLTS, dict]:
+    """Merge every ontology JSON in a directory into one TLTS (a colimit of
+    the domain ontologies — shared types like Person glue the subgraphs).
+
+    Returns (full_tlts, train_tlts, info):
+      - full_tlts: all rules from all ontologies
+      - train_tlts: rules from non-holdout ontologies only — the corpus is
+        generated under THIS system, so held-out-only rules never appear
+        in training text
+      - info: sizes + region maps, incl. holdout_start_states (types that
+        occur as a rule domain ONLY in held-out ontologies — the unseen
+        region for the generalization eval)
+    """
+    import glob as _glob
+    holdout_files = holdout_files or []
+    full_delta, train_delta = [], []
+    seen_full, seen_train = set(), set()
+    domain_onts: Dict[str, set] = {}
+    all_types, n_files = set(), 0
+    for path in sorted(_glob.glob(os.path.join(ontology_dir, "*_ontology.json"))):
+        fname = os.path.basename(path)
+        is_holdout = fname in holdout_files
+        with open(path) as f:
+            d = json.load(f)
+        n_files += 1
+        for c in d.get("concepts", []):
+            all_types.add(c["qid"])
+        for r in d.get("relations", []):
+            dom, pid, rng = r.get("domain"), r.get("pid"), r.get("range")
+            if not (dom and pid and rng):
+                continue
+            all_types |= {dom, rng}
+            domain_onts.setdefault(dom, set()).add(fname)
+            if (dom, pid) not in seen_full:
+                seen_full.add((dom, pid))
+                full_delta.append((dom, pid, rng))
+            if not is_holdout and (dom, pid) not in seen_train:
+                seen_train.add((dom, pid))
+                train_delta.append((dom, pid, rng))
+    types = sorted(all_types)
+    full = TLTS(types=types,
+                labels=sorted({l for _, l, _ in full_delta}),
+                delta=full_delta)
+    train = TLTS(types=types,
+                 labels=full.labels,  # shared label vocabulary
+                 delta=train_delta)
+    holdout_starts = sorted(
+        t for t, onts in domain_onts.items()
+        if onts and onts <= set(holdout_files))
+    info = {
+        "n_ontologies": n_files, "holdout_files": holdout_files,
+        "n_types": len(types), "n_labels": len(full.labels),
+        "n_rules_full": len(full_delta), "n_rules_train": len(train_delta),
+        "n_rules_holdout_only": len(full_delta) - len(train_delta),
+        "holdout_start_states": holdout_starts,
+    }
+    return full, train, info
+
+
 # ---------------------------------------------------------------------------
 # Serialization
 # ---------------------------------------------------------------------------
@@ -152,26 +213,28 @@ class LMPrior:
         cont_ids = [self.tokenizer(f" -{l}->", add_special_tokens=False,
                                    return_tensors="pt").input_ids[0]
                     for l in labels]
-        lens = [c.shape[0] for c in cont_ids]
-        Lmax = P + max(lens)
         pad = self.tokenizer.pad_token_id
-        batch = torch.full((len(labels), Lmax), pad, dtype=torch.long)
-        mask = torch.zeros((len(labels), Lmax), dtype=torch.long)
-        for i, c in enumerate(cont_ids):
-            L = P + c.shape[0]
-            batch[i, :P] = prefix_ids
-            batch[i, P:L] = c
-            mask[i, :L] = 1
-        batch, mask = batch.to(self.device), mask.to(self.device)
-        with torch.no_grad():
-            logits = self.model(input_ids=batch, attention_mask=mask).logits
-            logprobs = torch.log_softmax(logits.float(), dim=-1)
         scores = []
-        for i, c in enumerate(cont_ids):
-            s = 0.0
-            for j in range(c.shape[0]):
-                s += logprobs[i, P + j - 1, batch[i, P + j]].item()
-            scores.append(s)
+        CHUNK = 64  # 68-label batches already brushed the L4's 24 GB
+        for lo in range(0, len(labels), CHUNK):
+            chunk = cont_ids[lo:lo + CHUNK]
+            Lmax = P + max(c.shape[0] for c in chunk)
+            batch = torch.full((len(chunk), Lmax), pad, dtype=torch.long)
+            mask = torch.zeros((len(chunk), Lmax), dtype=torch.long)
+            for i, c in enumerate(chunk):
+                L = P + c.shape[0]
+                batch[i, :P] = prefix_ids
+                batch[i, P:L] = c
+                mask[i, :L] = 1
+            batch, mask = batch.to(self.device), mask.to(self.device)
+            with torch.no_grad():
+                logits = self.model(input_ids=batch, attention_mask=mask).logits
+                logprobs = torch.log_softmax(logits.float(), dim=-1)
+            for i, c in enumerate(chunk):
+                s = 0.0
+                for j in range(c.shape[0]):
+                    s += logprobs[i, P + j - 1, batch[i, P + j]].item()
+                scores.append(s)
         m = max(scores)
         exps = [math.exp(s - m) for s in scores]
         z = sum(exps)
@@ -222,6 +285,7 @@ class EvalResult:
     mean_kl_per_step: float
     mean_logp_enforced: float
     mean_logp_masked: float
+    mean_masked_entropy: float = 0.0  # diversity gauge: 0 = deterministic
 
 
 def gen_enforced(prior, tlts: TLTS, rng, max_len: int = 12,
@@ -246,7 +310,7 @@ def gen_enforced(prior, tlts: TLTS, rng, max_len: int = 12,
 
 def evaluate(prior, tlts: TLTS, n: int, rng, max_len: int = 12,
              starts: Optional[List[str]] = None) -> EvalResult:
-    kls, logps_raw, logps_masked = [], [], []
+    kls, logps_raw, logps_masked, ents = [], [], [], []
     for _ in range(n):
         start = rng.choice(starts) if starts else "Customer"
         t = start
@@ -262,6 +326,7 @@ def evaluate(prior, tlts: TLTS, n: int, rng, max_len: int = 12,
             masked = {l: p / z for l, p in masked.items()}
             kls.append(sum(p * math.log(p / max(dist[l], 1e-12))
                            for l, p in masked.items() if p > 0))
+            ents.append(-sum(p * math.log(p) for p in masked.values() if p > 0))
             label = rng.choices(list(masked), weights=list(masked.values()))[0]
             lp_raw += math.log(max(dist[label], 1e-12))
             lp_masked += math.log(max(masked[label], 1e-12))
@@ -273,6 +338,7 @@ def evaluate(prior, tlts: TLTS, n: int, rng, max_len: int = 12,
         mean_kl_per_step=sum(kls) / max(len(kls), 1),
         mean_logp_enforced=sum(logps_raw) / max(len(logps_raw), 1),
         mean_logp_masked=sum(logps_masked) / max(len(logps_masked), 1),
+        mean_masked_entropy=sum(ents) / max(len(ents), 1),
     )
 
 
@@ -388,6 +454,94 @@ def run(model_name: str, out_path: str, train_steps: int = 2000,
     return results
 
 
+def run_generalization(model_name: str, out_path: str, ontology_dir: str,
+                       holdout_files: List[str], train_steps: int = 500,
+                       eval_every: int = 100, batch_size: int = 8,
+                       n_train_traj: int = 256, n_eval_traj: int = 40,
+                       n_soundness_traj: int = 120, seed: int = 42,
+                       fake: bool = False) -> dict:
+    """Generalization split on the merged ontology graph.
+
+    Corpus: (D)-enforced trajectories under the TRAIN subsystem only
+    (held-out-only rules never appear in training text). Eval: enforcer-off
+    soundness judged against the FULL rulebook, separately from train-region
+    starts (control) and held-out-region starts (the actual test:
+    rule-following on regions the model never saw).
+    """
+    import random
+    rng = random.Random(seed)
+    full, train_tlts, info = tlts_merged_text2kg(ontology_dir, holdout_files)
+    train_starts = [t for t in start_states(train_tlts)
+                    if t not in set(info["holdout_start_states"])]
+    holdout_starts = [t for t in info["holdout_start_states"]
+                      if full.admissible_from(t)]
+    if not holdout_starts:
+        raise SystemExit("no held-out start states — pick different holdouts")
+    print(f"merged: {json.dumps(info)}", flush=True)
+    print(f"train starts {len(train_starts)}, holdout starts {len(holdout_starts)}",
+          flush=True)
+
+    t0 = time.time()
+    prior = FakePrior(full, seed) if fake else LMPrior(model_name)
+    print(f"[{time.time()-t0:.0f}s] model loaded: {model_name}", flush=True)
+
+    def snapshot(tag):
+        s_train = soundness_off(prior, full, n_soundness_traj, rng,
+                                starts=train_starts)
+        s_hold = soundness_off(prior, full, n_soundness_traj, rng,
+                               starts=holdout_starts)
+        print(f"[{time.time()-t0:.0f}s] {tag}: off-soundness "
+              f"train-region {s_train:.1f}%, HELD-OUT {s_hold:.1f}%", flush=True)
+        return {"train_region": s_train, "holdout_region": s_hold}
+
+    before = snapshot("baseline")
+    ev0 = evaluate(prior, full, n_eval_traj, rng, starts=train_starts)
+
+    corpus = [gen_enforced(prior, train_tlts, rng, starts=train_starts)[0]
+              for _ in range(n_train_traj)]
+    # contamination check: no held-out-only rule may appear in the corpus
+    holdout_rules = set(full.delta) - set(train_tlts.delta)
+    leaked = sum(1 for txt in corpus for (d, l, r) in holdout_rules
+                 if f"{d} -{l}-> {r}" in txt)
+    print(f"[{time.time()-t0:.0f}s] corpus: {n_train_traj} trajectories, "
+          f"held-out-rule leaks: {leaked} (must be 0)", flush=True)
+
+    steps_axis, kl_series, ent_series = [0], [ev0.mean_kl_per_step], \
+        [ev0.mean_masked_entropy]
+    for step in range(1, train_steps + 1):
+        batch = rng.sample(corpus, min(batch_size, len(corpus)))
+        loss = prior.train_step(batch)
+        if step % eval_every == 0 or step == train_steps:
+            ev = evaluate(prior, full, n_eval_traj, rng, starts=train_starts)
+            steps_axis.append(step)
+            kl_series.append(ev.mean_kl_per_step)
+            ent_series.append(ev.mean_masked_entropy)
+            print(f"[{time.time()-t0:.0f}s] step {step}: loss {loss:.4f}, "
+                  f"KL/step {ev.mean_kl_per_step:.3f}, "
+                  f"masked-entropy {ev.mean_masked_entropy:.3f}", flush=True)
+
+    after = snapshot("final")
+    results = {
+        "experiment": "generalization_split_merged_graph",
+        "model_name": model_name if not fake else "FAKE (logic test)",
+        "merged_info": info,
+        "steps": steps_axis, "kl_per_step": kl_series,
+        "masked_entropy": ent_series,
+        "soundness_enforcer_off": {"before": before, "after": after},
+        "corpus_holdout_rule_leaks": leaked,
+        "n_eval_trajectories": n_soundness_traj, "seeds": [seed],
+        "config": {"train_steps": train_steps, "eval_every": eval_every,
+                   "batch_size": batch_size, "n_train_traj": n_train_traj,
+                   "holdout_files": holdout_files,
+                   "wall_seconds": round(time.time() - t0, 1)},
+    }
+    os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
+    with open(out_path, "w") as f:
+        json.dump(results, f, indent=2)
+    print(f"wrote {out_path}", flush=True)
+    return results
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--model", default="Qwen/Qwen2.5-1.5B")
@@ -399,7 +553,23 @@ def main():
                    help="no-torch logic test with a synthetic prior")
     p.add_argument("--ontology", default=None,
                    help="path to a Text2KGBench ontology JSON (real domain)")
+    p.add_argument("--generalize-dir", default=None,
+                   help="ontology directory: run the merged-graph generalization split")
+    p.add_argument("--holdout", default="6_politician_ontology.json,9_astronaut_ontology.json,15_sportsteam_ontology.json",
+                   help="comma-separated held-out ontology filenames")
     args = p.parse_args()
+
+    if args.generalize_dir:
+        holdouts = [h.strip() for h in args.holdout.split(",") if h.strip()]
+        if args.fake:
+            run_generalization("FAKE", args.out, args.generalize_dir, holdouts,
+                               train_steps=4, eval_every=2, batch_size=4,
+                               n_train_traj=16, n_eval_traj=20,
+                               n_soundness_traj=60, fake=True)
+        else:
+            run_generalization(args.model, args.out, args.generalize_dir,
+                               holdouts)
+        return
 
     if args.fake:
         run("FAKE", args.out, train_steps=4, eval_every=2, batch_size=4,

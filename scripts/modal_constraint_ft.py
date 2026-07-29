@@ -89,6 +89,40 @@ def train_ontology(ontology_file: str = "1_university_ontology.json"):
                 ontology_path=f"/root/ontologies/{ontology_file}")
 
 
+HOLDOUTS = "6_politician_ontology.json,9_astronaut_ontology.json,15_sportsteam_ontology.json"
+
+
+def _run_gen(model_name, out_name, holdouts=HOLDOUTS, **kwargs):
+    import sys
+    sys.path.insert(0, "/root/ptvm")
+    from experiment_constraint_ft import run_generalization
+    out = os.path.join(RESULTS_DIR, out_name)
+    res = run_generalization(model_name, out, "/root/ontologies",
+                             [h.strip() for h in holdouts.split(",")], **kwargs)
+    vol.commit()
+    return {k: res[k] for k in ("model_name", "soundness_enforcer_off",
+                                "corpus_holdout_rule_leaks", "config")}
+
+
+@app.function(image=image, cpu=8, memory=16384, timeout=3600,
+              volumes={RESULTS_DIR: vol})
+def smoke_generalization():
+    """Tiny model, tiny counts, full merged graph — proves the split logic
+    (region separation, contamination check, chunked scoring) before GPU."""
+    return _run_gen("HuggingFaceTB/SmolLM2-135M", "smoke_gen_results.json",
+                    train_steps=10, eval_every=5, batch_size=4,
+                    n_train_traj=12, n_eval_traj=4, n_soundness_traj=10)
+
+
+@app.function(image=image, gpu="L4", timeout=3 * 3600,
+              volumes={RESULTS_DIR: vol})
+def train_generalization():
+    """Qwen2.5-1.5B on the merged 19-ontology graph, writtenwork+scientist
+    held out. The question: does enforcer-off soundness rise on regions the
+    model never trained on?"""
+    return _run_gen("Qwen/Qwen2.5-1.5B", "constraint_ft_generalization.json")
+
+
 @app.function(image=image, volumes={RESULTS_DIR: vol})
 def _read(name: str) -> str:
     with open(os.path.join(RESULTS_DIR, name)) as f:

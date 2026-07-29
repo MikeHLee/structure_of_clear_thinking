@@ -41,6 +41,7 @@ results/*
 !results/attention_ablation_v2.json
 !results/attention_ablation.png
 !results/attention_ablation_v2.png
+!results/constraint_ft_results.json
 __pycache__/
 
 # LaTeX build artifacts (papers/)

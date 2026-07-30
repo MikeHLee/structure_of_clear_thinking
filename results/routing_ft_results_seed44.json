@@ -1,0 +1,78 @@
+{
+  "experiment": "routing_targeted_ft_generalization",
+  "model_name": "Qwen/Qwen2.5-1.5B",
+  "merged_info": {
+    "n_ontologies": 19,
+    "holdout_files": [
+      "6_politician_ontology.json",
+      "9_astronaut_ontology.json",
+      "15_sportsteam_ontology.json"
+    ],
+    "n_types": 127,
+    "n_labels": 357,
+    "n_rules_full": 598,
+    "n_rules_train": 509,
+    "n_rules_holdout_only": 89,
+    "holdout_start_states": [
+      "Astronaut",
+      "Battle",
+      "League",
+      "Mission",
+      "Party",
+      "Politician",
+      "SportsTeam",
+      "State"
+    ]
+  },
+  "baseline": {
+    "train_region": 7.5,
+    "holdout_region": 3.75,
+    "kl_per_step": 2.3181160493644835,
+    "masked_entropy": 0.6768678312094297
+  },
+  "conditions": {
+    "qk_r64": {
+      "train_region": 83.75,
+      "holdout_region": 16.25,
+      "kl_per_step": 0.43377831979793957,
+      "masked_entropy": 0.28675358502046777,
+      "trainable_params": 8716288
+    },
+    "vo_r32": {
+      "train_region": 92.5,
+      "holdout_region": 27.5,
+      "kl_per_step": 0.7371037659324949,
+      "masked_entropy": 0.41517092160079455,
+      "trainable_params": 4358144
+    },
+    "mlp_r16": {
+      "train_region": 86.25,
+      "holdout_region": 16.25,
+      "kl_per_step": 0.5509397675389464,
+      "masked_entropy": 0.3887612161060777,
+      "trainable_params": 14106624
+    },
+    "all_r16": {
+      "train_region": 93.75,
+      "holdout_region": 22.5,
+      "kl_per_step": 0.36717739654131937,
+      "masked_entropy": 0.44040035156131724,
+      "trainable_params": 18464768
+    }
+  },
+  "config": {
+    "train_steps": 500,
+    "batch_size": 8,
+    "n_train_traj": 256,
+    "n_sound": 80,
+    "holdout_files": [
+      "6_politician_ontology.json",
+      "9_astronaut_ontology.json",
+      "15_sportsteam_ontology.json"
+    ],
+    "seed": 44,
+    "shared_corpus": true,
+    "capacity_note": "trainable params NOT exactly matched; lean on transfer ratios",
+    "wall_seconds": 5530.1
+  }
+}

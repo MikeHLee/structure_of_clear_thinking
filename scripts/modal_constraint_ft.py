@@ -228,16 +228,19 @@ def smoke_routing():
 
 @app.function(image=image, gpu="L4", timeout=5 * 3600,
               volumes={RESULTS_DIR: vol})
-def train_routing():
+def train_routing(seed: int = 42):
     """Qwen2.5-1.5B, merged-graph generalization split, 4 LoRA-target
-    conditions (qk / vo / mlp / all) on one shared base-model corpus."""
+    conditions (qk / vo / mlp / all) on one shared base-model corpus.
+    Seed varies corpus sampling, batch order, and eval streams."""
     import sys
     sys.path.insert(0, "/root/ptvm")
     from experiment_routing_ft import run_routing
+    name = ("routing_ft_results.json" if seed == 42
+            else f"routing_ft_results_seed{seed}.json")
     res = run_routing("Qwen/Qwen2.5-1.5B",
-                      os.path.join(RESULTS_DIR, "routing_ft_results.json"),
+                      os.path.join(RESULTS_DIR, name),
                       "/root/ontologies",
-                      [h.strip() for h in HOLDOUTS.split(",")])
+                      [h.strip() for h in HOLDOUTS.split(",")], seed=seed)
     vol.commit()
     return {"baseline": res["baseline"], "conditions": res["conditions"]}
 

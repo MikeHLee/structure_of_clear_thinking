@@ -180,7 +180,8 @@ class LMPrior:
 
     def __init__(self, model_name: str, device: Optional[str] = None,
                  lora: bool = True, lr: float = 1e-4,
-                 attn_implementation: Optional[str] = None):
+                 attn_implementation: Optional[str] = None,
+                 target_modules="all-linear", lora_r: int = 16):
         import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -196,13 +197,15 @@ class LMPrior:
             model_name, torch_dtype=dtype, **extra).to(self.device)
         if lora:
             from peft import LoraConfig, get_peft_model
-            cfg = LoraConfig(r=16, lora_alpha=32, lora_dropout=0.05,
-                             target_modules="all-linear",
+            cfg = LoraConfig(r=lora_r, lora_alpha=2 * lora_r,
+                             lora_dropout=0.05,
+                             target_modules=target_modules,
                              task_type="CAUSAL_LM")
             self.model = get_peft_model(self.model, cfg)
         self.model.train()
-        self.opt = torch.optim.AdamW(
-            [p for p in self.model.parameters() if p.requires_grad], lr=lr)
+        trainable = [p for p in self.model.parameters() if p.requires_grad]
+        self.opt = (torch.optim.AdamW(trainable, lr=lr)
+                    if trainable else None)  # scoring-only prior (lora=False)
 
     # -- scoring ------------------------------------------------------------
     def label_dist(self, prefix: str, labels: List[str]) -> Dict[str, float]:

@@ -208,6 +208,40 @@ def probe_region():
     return res["summary"]
 
 
+@app.function(image=image, cpu=8, memory=16384, timeout=3600,
+              volumes={RESULTS_DIR: vol})
+def smoke_routing():
+    """Per-condition adapter creation + shared-corpus flow on CPU/SmolLM,
+    2 conditions, tiny counts."""
+    import sys
+    sys.path.insert(0, "/root/ptvm")
+    from experiment_routing_ft import run_routing
+    res = run_routing("HuggingFaceTB/SmolLM2-135M",
+                      os.path.join(RESULTS_DIR, "smoke_routing.json"),
+                      "/root/ontologies",
+                      [h.strip() for h in HOLDOUTS.split(",")],
+                      train_steps=4, batch_size=4, n_train_traj=6,
+                      n_sound=6, n_eval=3, conditions=["qk_r64", "mlp_r16"])
+    vol.commit()
+    return res["conditions"]
+
+
+@app.function(image=image, gpu="L4", timeout=5 * 3600,
+              volumes={RESULTS_DIR: vol})
+def train_routing():
+    """Qwen2.5-1.5B, merged-graph generalization split, 4 LoRA-target
+    conditions (qk / vo / mlp / all) on one shared base-model corpus."""
+    import sys
+    sys.path.insert(0, "/root/ptvm")
+    from experiment_routing_ft import run_routing
+    res = run_routing("Qwen/Qwen2.5-1.5B",
+                      os.path.join(RESULTS_DIR, "routing_ft_results.json"),
+                      "/root/ontologies",
+                      [h.strip() for h in HOLDOUTS.split(",")])
+    vol.commit()
+    return {"baseline": res["baseline"], "conditions": res["conditions"]}
+
+
 @app.function(image=image, volumes={RESULTS_DIR: vol})
 def _read(name: str) -> str:
     with open(os.path.join(RESULTS_DIR, name)) as f:

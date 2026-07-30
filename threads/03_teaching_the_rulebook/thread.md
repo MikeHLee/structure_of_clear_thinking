@@ -143,3 +143,30 @@ enforcer-off soundness 0.0% → 100.0% · seed 42 · 2000 LoRA steps
 - Post 6 is the determinism/mode-collapse disclosure — do not soften it; it
   pre-empts the sharpest technical objection to the fluency claim.
 - Post after threads 01 and 02; add both links.
+- **Generalization nuance (added after the merged-graph split)**: "the
+  rulebook transfers into the weights" (Posts 1/6, fig 3) is true only
+  region-locally — on a merged 19-ontology graph, trained regions hit 92.5%
+  enforcer-off soundness while held-out regions stay near baseline (15.8%).
+  Fold this into Post 6/9 or make it the bridge to thread 04. Do not post
+  the "transfers into weights" framing without this qualifier.
+
+## Citations & positioning (verified 2026-07-30; post as REPLIES)
+
+The COST is known; the CURE is the contribution. Tam et al.
+(arXiv:2408.02442) showed format constraints degrade reasoning — cite it
+before showing the KL curve. CRANE (arXiv:2502.09061) mitigates by
+*relaxing* the constraint; we train *through* it with the guarantee never
+lapsing. Process-reward contrast: Lightman et al., "Let's Verify Step by
+Step" (arXiv:2305.20050) *scores* steps statistically; enforcement
+*forbids* invalid steps by construction. Memorization-not-abstraction has
+published backbone: Dziri et al., "Faith and Fate" (arXiv:2305.18654) —
+frame our region split as a clean quantified instance with a soundness
+oracle, not a discovery of the phenomenon.
+
+**Reply A (cost lineage)** — after Post 5:
+"The constraint-costs-fluency effect is documented (arXiv:2408.02442), and
+prior mitigations relax the constraint to recover it (arXiv:2502.09061).
+The alternative shown here: keep the constraint, train on its outputs —
+the cost measurably goes to ~zero and the guarantee never lapses."
+
+No verified author handles for this thread's citations — cite papers only.

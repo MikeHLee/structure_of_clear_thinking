@@ -146,3 +146,31 @@ github.com/MikeHLee/structure_of_clear_thinking
   Post 8. Thread 03 covers trained-model results once the fine-tuning phase
   lands.
 - Add the arXiv link to Post 10 once the paper is up.
+
+## Citations & positioning (verified 2026-07-30; post as REPLIES to the thread)
+
+**Do not present "constrained decoding gives soundness by construction" as
+new on its own** — Poesia, Gandhi, Zelikman & Goodman, "Certified Deductive
+Reasoning with Language Models" (arXiv:2306.04031, TMLR) already delivers
+per-step constrained decoding with certified sound steps. Our stated delta,
+every time: (a) an unconditional typed-ontology guarantee over the whole
+trajectory (not formalized-logic steps the model opts into); (b) the negative
+result — attention-level reachability masking collapses to no-constraint on
+cyclic ontologies; (c) portable third-party certificates (thread 02).
+
+**Reply A (lineage + delta)** — post after Post 4:
+"Standing on shoulders: certified per-step constrained decoding is
+@GabrielPoesia + @noahdgoodman's LogicGuide (arXiv:2306.04031), and the
+decoding machinery traces to @remilouf's Outlines (arXiv:2307.09702 —
+guarantees *format*). Our delta: an unconditional typed-rulebook guarantee
+per trajectory + the negative result above + receipts (next thread)."
+
+**Reply B (motivation)** — post after Post 2:
+"Why verify structure instead of trusting the model's prose? Because CoT
+explanations systematically misrepresent the real computation —
+@milesaturpin @sleepinyourhat et al., arXiv:2305.04388, and Lanham et al.,
+arXiv:2307.13702."
+
+Verified tags only: @GabrielPoesia, @noahdgoodman, @remilouf, @milesaturpin,
+@sleepinyourhat. (Willard's and Lanham's handles unverified — cite the
+papers, do not guess handles.)

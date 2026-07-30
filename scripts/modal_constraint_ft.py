@@ -160,6 +160,54 @@ def probe_attention():
     return res["summary"]
 
 
+@app.function(image=image, cpu=8, memory=16384, timeout=3600,
+              volumes={RESULTS_DIR: vol})
+def smoke_causal():
+    """QK hooks + GQA mapping + head-ablation machinery on CPU/SmolLM
+    (SmolLM2 is also GQA, so the kv-head mapping gets exercised)."""
+    import sys
+    sys.path.insert(0, "/root/ptvm")
+    from experiment_probe_causal import run_causal
+    res = run_causal("HuggingFaceTB/SmolLM2-135M",
+                     os.path.join(RESULTS_DIR, "smoke_causal.json"),
+                     f"/root/ontologies/{PROBE_ONT}",
+                     n_stimuli=4, train_steps=6, n_train_traj=8,
+                     n_sound=10, n_eval=4, topk=4)
+    vol.commit()
+    return res["qk_summary"]
+
+
+@app.function(image=image, gpu="L4", timeout=2 * 3600,
+              volumes={RESULTS_DIR: vol})
+def probe_causal():
+    """Qwen2.5-1.5B on WrittenWork: QK geometry before/after FT + head
+    ablation battery with matched random controls."""
+    import sys
+    sys.path.insert(0, "/root/ptvm")
+    from experiment_probe_causal import run_causal
+    res = run_causal("Qwen/Qwen2.5-1.5B",
+                     os.path.join(RESULTS_DIR, "qk_causal.json"),
+                     f"/root/ontologies/{PROBE_ONT}")
+    vol.commit()
+    return {"qk_summary": res["qk_summary"], "ablation": res["ablation"]}
+
+
+@app.function(image=image, gpu="L4", timeout=2 * 3600,
+              volumes={RESULTS_DIR: vol})
+def probe_region():
+    """Merged-graph QK region probe: train-region vs held-out-only rule
+    signal, before/after fine-tuning on the train region."""
+    import sys
+    sys.path.insert(0, "/root/ptvm")
+    from experiment_probe_causal import run_region_probe
+    res = run_region_probe("Qwen/Qwen2.5-1.5B",
+                           os.path.join(RESULTS_DIR, "qk_region.json"),
+                           "/root/ontologies",
+                           [h.strip() for h in HOLDOUTS.split(",")])
+    vol.commit()
+    return res["summary"]
+
+
 @app.function(image=image, volumes={RESULTS_DIR: vol})
 def _read(name: str) -> str:
     with open(os.path.join(RESULTS_DIR, name)) as f:

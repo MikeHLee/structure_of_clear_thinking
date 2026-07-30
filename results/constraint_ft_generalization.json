@@ -1,0 +1,78 @@
+{
+  "experiment": "generalization_split_merged_graph",
+  "model_name": "Qwen/Qwen2.5-1.5B",
+  "merged_info": {
+    "n_ontologies": 19,
+    "holdout_files": [
+      "6_politician_ontology.json",
+      "9_astronaut_ontology.json",
+      "15_sportsteam_ontology.json"
+    ],
+    "n_types": 127,
+    "n_labels": 357,
+    "n_rules_full": 598,
+    "n_rules_train": 509,
+    "n_rules_holdout_only": 89,
+    "holdout_start_states": [
+      "Astronaut",
+      "Battle",
+      "League",
+      "Mission",
+      "Party",
+      "Politician",
+      "SportsTeam",
+      "State"
+    ]
+  },
+  "steps": [
+    0,
+    100,
+    200,
+    300,
+    400,
+    500
+  ],
+  "kl_per_step": [
+    2.1839068856686468,
+    0.3145247344945448,
+    0.7333732993071204,
+    0.2883748573794708,
+    0.23938259264164802,
+    0.3203297196227907
+  ],
+  "masked_entropy": [
+    0.46793230522697105,
+    0.4506380706075867,
+    0.3736468225764736,
+    0.4300288728164884,
+    0.34319166466029377,
+    0.35405900995764417
+  ],
+  "soundness_enforcer_off": {
+    "before": {
+      "train_region": 8.333333333333334,
+      "holdout_region": 4.166666666666667
+    },
+    "after": {
+      "train_region": 92.5,
+      "holdout_region": 15.833333333333334
+    }
+  },
+  "corpus_holdout_rule_leaks": 0,
+  "n_eval_trajectories": 120,
+  "seeds": [
+    42
+  ],
+  "config": {
+    "train_steps": 500,
+    "eval_every": 100,
+    "batch_size": 8,
+    "n_train_traj": 256,
+    "holdout_files": [
+      "6_politician_ontology.json",
+      "9_astronaut_ontology.json",
+      "15_sportsteam_ontology.json"
+    ],
+    "wall_seconds": 7539.6
+  }
+}

@@ -20,7 +20,9 @@ Each thread directory contains:
 | 01 | Reachability masking is not enough | `Percepta_Transformer_VM/experiment_results.md` (loci comparison, cyclic stress, mask audit) | **Draft ready** |
 | 02 | Receipts for AI: audit certificates you can verify without the model | `verification_certificate.py`, `sample_audit_certificate.json` | **Draft ready** |
 | 03 | Teaching the model the rulebook: constraint-aware fine-tuning | Fine-tuning phase (upcoming — SOGB-style scale-up) | **Scaffolded** — copy + figure pipeline ready (`03_teaching_the_rulebook/`), numbers await training runs; figures render from `results/constraint_ft_results.json` |
-| 04 | Finding contradictions in a knowledge graph with topology (H¹) | `docs/EVALUATION_SUMMARY_HDC_SHEAF.md`, `results/week4_evaluation_report.md` | Planned |
+| 04 | The map is not in the attention (soft KG exists, is causally inert, untouched by FT) | `results/qk_causal.json`, `qk_region.json`, `attention_probe.json` | **Draft ready** (`04_map_not_in_attention/`) |
+| 05 | The result that died in replication (LoRA placement null + the generalization wall) | `results/routing_ft_results*.json` (3 seeds) | **Draft ready** (`05_placement_replication/`) |
+| 06 | Finding contradictions in a knowledge graph with topology (H¹) | `docs/EVALUATION_SUMMARY_HDC_SHEAF.md`, `results/week4_evaluation_report.md` | Planned |
 
 ## Blog mirroring
 

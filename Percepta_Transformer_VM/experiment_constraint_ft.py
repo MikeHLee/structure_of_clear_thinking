@@ -179,7 +179,8 @@ class LMPrior:
     """
 
     def __init__(self, model_name: str, device: Optional[str] = None,
-                 lora: bool = True, lr: float = 1e-4):
+                 lora: bool = True, lr: float = 1e-4,
+                 attn_implementation: Optional[str] = None):
         import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -189,8 +190,10 @@ class LMPrior:
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
+        extra = ({"attn_implementation": attn_implementation}
+                 if attn_implementation else {})
         self.model = AutoModelForCausalLM.from_pretrained(
-            model_name, torch_dtype=dtype).to(self.device)
+            model_name, torch_dtype=dtype, **extra).to(self.device)
         if lora:
             from peft import LoraConfig, get_peft_model
             cfg = LoraConfig(r=16, lora_alpha=32, lora_dropout=0.05,

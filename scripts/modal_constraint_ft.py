@@ -125,6 +125,41 @@ def train_generalization():
     return _run_gen("Qwen/Qwen2.5-1.5B", "constraint_ft_generalization.json")
 
 
+PROBE_ONT = "14_writtenwork_ontology.json"
+
+
+@app.function(image=image, cpu=8, memory=16384, timeout=3600,
+              volumes={RESULTS_DIR: vol})
+def smoke_probe():
+    """Attention-probe path on CPU with a tiny model — verifies eager
+    attention extraction, offset mapping, and the AUC bookkeeping."""
+    import sys
+    sys.path.insert(0, "/root/ptvm")
+    from experiment_attention_probe import run_probe
+    res = run_probe("HuggingFaceTB/SmolLM2-135M",
+                    os.path.join(RESULTS_DIR, "smoke_probe.json"),
+                    f"/root/ontologies/{PROBE_ONT}",
+                    n_traj_stimuli=4, n_random_stimuli=4, train_steps=6,
+                    n_train_traj=8)
+    vol.commit()
+    return res["summary"]
+
+
+@app.function(image=image, gpu="L4", timeout=2 * 3600,
+              volumes={RESULTS_DIR: vol})
+def probe_attention():
+    """Qwen2.5-1.5B: per-head ontology-edge AUC before vs after
+    constraint-aware fine-tuning on WrittenWork (depth-5 chains)."""
+    import sys
+    sys.path.insert(0, "/root/ptvm")
+    from experiment_attention_probe import run_probe
+    res = run_probe("Qwen/Qwen2.5-1.5B",
+                    os.path.join(RESULTS_DIR, "attention_probe.json"),
+                    f"/root/ontologies/{PROBE_ONT}")
+    vol.commit()
+    return res["summary"]
+
+
 @app.function(image=image, volumes={RESULTS_DIR: vol})
 def _read(name: str) -> str:
     with open(os.path.join(RESULTS_DIR, name)) as f:

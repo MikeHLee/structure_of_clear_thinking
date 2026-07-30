@@ -3,8 +3,7 @@
 **Status**: DRAFT — ready for review (post after thread 04)
 **Figures**: `figures/` (generated from `results/routing_ft_results*.json`,
 3 seeds)
-**Pairs with blog post**: new post to draft (working title: "Kill Your
-Favorite Result")
+**Pairs with blog post**: `blog/08_kill_your_favorite_result.md`
 
 Each post ≤280 characters. Alt text goes in X's image description field.
 

@@ -5,8 +5,7 @@
 Figures regenerated from the real results file (no placeholders).
 **Depends on**: nothing — run complete. A dense-checkpoint re-run (~$1.30,
 see posting notes) would improve figs 1–2 before posting.
-**Pairs with blog post**: new post (working title: "Teaching the Model the
-Rulebook") — to be drafted.
+**Pairs with blog post**: `blog/06_teaching_the_rulebook.md`
 
 Each post is ≤280 characters. Attach the figure named under the post; alt
 text goes in X's image description field.

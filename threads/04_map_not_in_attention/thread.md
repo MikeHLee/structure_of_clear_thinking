@@ -3,8 +3,7 @@
 **Status**: DRAFT — ready for review (post after thread 03)
 **Figures**: `figures/` (generated from `results/qk_causal.json`,
 `results/qk_region.json`, `results/constraint_ft_generalization.json`)
-**Pairs with blog post**: new post to draft (working title: "The Map Is Not
-the Mechanism")
+**Pairs with blog post**: `blog/07_the_map_is_not_the_mechanism.md`
 
 Each post ≤280 characters. Alt text goes in X's image description field.
 

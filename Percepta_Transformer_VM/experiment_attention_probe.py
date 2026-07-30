@@ -257,8 +257,19 @@ def run_probe(model_name: str, out_path: str, ontology_path: str,
         "ontology_info": info,
         "before": before, "after": after,
         "summary": {
-            phase: {sname: summarize(heads)
-                    for sname, heads in phases.items()}
+            # valid trajectories have NO unreachable pairs by construction
+            # (you walked there), so their contrast is edge-vs-reachable;
+            # random sequences support both contrasts.
+            phase: {
+                "valid_trajectories": summarize(
+                    phases["valid_trajectories"], "auc_edge_vs_reachable"),
+                "random_sequences": {
+                    "edge_vs_unreachable": summarize(
+                        phases["random_sequences"], "auc_edge_vs_unreachable"),
+                    "edge_vs_reachable": summarize(
+                        phases["random_sequences"], "auc_edge_vs_reachable"),
+                },
+            }
             for phase, phases in (("before", before), ("after", after))
         },
         "config": {"n_traj_stimuli": n_traj_stimuli,

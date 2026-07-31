@@ -64,6 +64,17 @@ def train_l4():
                 n_train_traj=512, n_eval_traj=100, n_soundness_traj=300)
 
 
+@app.function(image=image, gpu="L4", timeout=2 * 3600,
+              volumes={RESULTS_DIR: vol})
+def train_l4_dense():
+    """Dense-checkpoint re-run of the thread-03 e-commerce experiment:
+    eval every 10 steps so figs 1-2 show the actual learning curve instead
+    of a cliff between checkpoints 0 and 250. Same seed/model/domain."""
+    return _run("Qwen/Qwen2.5-1.5B", "constraint_ft_results_dense.json",
+                train_steps=300, eval_every=10, batch_size=8,
+                n_train_traj=256, n_eval_traj=30, n_soundness_traj=200)
+
+
 @app.function(image=image, cpu=8, memory=16384, timeout=3600,
               volumes={RESULTS_DIR: vol})
 def smoke_ontology(ontology_file: str = "1_university_ontology.json"):

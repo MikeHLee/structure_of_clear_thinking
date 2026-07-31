@@ -111,6 +111,14 @@ def fig1_disagreement(res, ph):
     ax.annotate(f"after training: {s1:.2f}", xy=(res["steps"][-1], s1),
                 xytext=(res["steps"][-1] * 0.68, s1 + (s0 - s1) * 0.12),
                 fontsize=12, fontweight="bold", color=INK)
+    conv = next((s for s, k in zip(res["steps"][1:], res["kl_per_step"][1:])
+                 if k < 0.05), None)
+    if conv is not None and conv <= res["steps"][-1] * 0.2:
+        ax.annotate(f"≈0 by step {conv}\n({conv * 8} training examples)",
+                    xy=(conv, res["kl_per_step"][res["steps"].index(conv)]),
+                    xytext=(res["steps"][-1] * 0.12, s0 * 0.45),
+                    fontsize=12, fontweight="bold", color=ORANGE,
+                    arrowprops=dict(arrowstyle="->", color=ORANGE, lw=1.6))
     headline(fig,
              "Training on rule-checked outputs teaches the model the rules",
              f"Model–rulebook disagreement (KL per generation step) while fine-tuning {res['model_name']} on its own enforced outputs · {res['domain']}.")

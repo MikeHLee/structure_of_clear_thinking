@@ -1,10 +1,8 @@
 # Thread 03 — "Teaching the model the rulebook"
 
-**Status**: DRAFT — numbers filled 2026-07-28 from the completed L4 run
-(`results/constraint_ft_results.json`, Qwen2.5-1.5B + LoRA, Modal).
-Figures regenerated from the real results file (no placeholders).
-**Depends on**: nothing — run complete. A dense-checkpoint re-run (~$1.30,
-see posting notes) would improve figs 1–2 before posting.
+**Status**: DRAFT — ready to post. Numbers from the dense-checkpoint L4
+re-run 2026-07-31 (`results/constraint_ft_results_dense.json`,
+Qwen2.5-1.5B + LoRA, eval every 10 steps). Figures regenerated from it.
 **Pairs with blog post**: `blog/06_teaching_the_rulebook.md`
 
 Each post is ≤280 characters. Attach the figure named under the post; alt
@@ -55,12 +53,12 @@ We fine-tuned Qwen2.5-1.5B (LoRA) this way on a 7-type shop ontology.
 Disagreement with the rulebook — how hard enforcement must reshape the
 model's choices, measured as KL per step — fell 0.95 → 0.00.
 
-And it didn't take long: converged before the first checkpoint at step 250.
+And it didn't take long: ≈0 by step 10. That's about 80 training examples.
 
 > **Alt text**: Line chart titled "Training on rule-checked outputs teaches
 > the model the rules." Model–rulebook disagreement (KL per generation step)
-> for Qwen2.5-1.5B falls from 0.95 at step 0 to 0.00 by the first checkpoint
-> at step 250, and stays at zero through step 2000.
+> for Qwen2.5-1.5B falls from 0.95 at step 0 to ≈0 by step 10 (annotated:
+> about 80 training examples), and stays at zero through step 300.
 
 ## Post 5 — the fluency cost vanishes  📎 fig2_fluency_recovers.png
 
@@ -72,8 +70,8 @@ enforcer just ran out of things to correct.
 
 > **Alt text**: Line chart titled "The fluency cost of enforcement trains
 > away." Log-probability per enforced sequence rises from −11.4 before
-> training to 0.0 by step 250, meeting the dashed "well-calibrated frontier"
-> reference line, and stays there through step 2000.
+> training to 0.0 by step 10, meeting the dashed "well-calibrated frontier"
+> reference line, and stays there through step 300.
 
 ## Post 6 — what "learned the rules" means here
 
@@ -128,17 +126,17 @@ Paper: [ARXIV LINK TBD]
 
 ## Numbers provenance (filled 2026-07-28)
 
-All from `results/constraint_ft_results.json` (L4 run, wall time 3h53m):
-KL/step 0.954 → 0.000 · logP −11.444 → −0.000 (frontier 0.000) ·
-enforcer-off soundness 0.0% → 100.0% · seed 42 · 2000 LoRA steps
-(converged ≤250) · eval N=100/checkpoint, soundness N=300.
+All from `results/constraint_ft_results_dense.json` (dense L4 re-run,
+wall 31m): KL/step 0.950 → 0.000 · logP −11.40 → −0.00 (frontier 0.00) ·
+enforcer-off soundness 0.0% → 100.0% · seed 42 · 300 LoRA steps, eval
+every 10 (≈0 by step 10) · soundness N=200. The original 2000-step run
+(`constraint_ft_results.json`) agrees at its coarser checkpoints.
 
 ## Posting notes
 
-- **Recommended before posting**: a dense-checkpoint re-run (eval every 10
-  steps for the first 150, smaller eval N) so figs 1–2 show the actual
-  learning curve instead of a cliff between two checkpoints. ~$1.30 on L4.
-  The current figures are honest but coarse.
+- Dense-checkpoint re-run DONE (2026-07-31): even at 10-step resolution
+  the drop is a cliff — convergence within ~10 steps / 80 examples. The
+  figure annotates this; Post 6 uses it as saturation evidence.
 - Post 6 is the determinism/mode-collapse disclosure — do not soften it; it
   pre-empts the sharpest technical objection to the fluency claim.
 - Post after threads 01 and 02; add both links.

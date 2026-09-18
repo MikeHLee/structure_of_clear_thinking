@@ -10,9 +10,9 @@ A research series on **neurosymbolic architectures for hallucination-free, audit
 |-------|-----------|--------|------------|
 | **1 — Ontological Induction Engine** (typed attention + proof engine) | `src/` | Core implementation + ablations complete | Typed attention drives invalid-pair attention mass from 0.295 → **0.000** with test accuracy at parity (47.4% vs 45.7%; 23-type ontology, 300 epochs) |
 | **2 — HDC/Sheaf Pipeline** (hyperdimensional encoding + cohomology) | `src/` (`ghrr_encoder`, `ontology_sheaf`, …) | Benchmarks complete (Modal A100) | FB15K-237 MRR **0.346** (competitive with ConvE ~0.325, RotatE ~0.338); H¹ cohomology detects injected conflicts (+53 dims for 76 conflicts) |
-| **3 — TLTS-Compilation** (type-safe & verifiable transformers) | `Percepta_Transformer_VM/`, `papers/` | **NeSy 2026 full-paper package ready** | Constrained decoding: **100% trajectory soundness by construction** vs 4–48% unconstrained; reachability masking alone proven insufficient; JSON audit certificates re-checkable without model weights |
+| **3 — TLTS-Compilation** (type-safe & verifiable transformers) | `Percepta_Transformer_VM/`, `papers/` | **Self-published preprint** (NeSy 2026 never submitted) | Constrained decoding: **100% trajectory soundness by construction** vs 4–48% unconstrained; reachability masking alone proven insufficient; JSON audit certificates re-checkable without model weights |
 | **4 — Epistemic-Status Bridge** (sourced vs unfalsifiable claims) | `src/epistemic_status.py`, `docs/` | Implemented, tests passing | SOURCED / FALSIFIABLE_UNSOURCED / UNFALSIFIABLE / UNKNOWABLE gate over (modality, provenance) — formalizes "reframe, don't assert" |
-| **Blog series** | `blog/` | Posts 0–5 drafted, publish schedule synced to venue windows | "Structure of Clear Thinking" — hallucination, type-safe attention, proofs-to-text, auditable AI, compiled attention |
+| **Blog series** | `blog/` | Posts 0–8 drafted (6–8 pair with threads 03–05); distribution via X + Ghost/Substack, no venue schedule | "Structure of Clear Thinking" — hallucination, type-safe attention, proofs-to-text, auditable AI, compiled attention |
 
 ## Core Idea
 
@@ -47,7 +47,7 @@ Benchmarked on FB15K-237 (272K triples) and WN18RR (87K triples); details in [do
 - **Conflict detection**: injecting 76 contradictions raises H¹ from 5 → 58 — cohomology dimension tracks inconsistency
 - **Query latency**: BFS 0.5ms · HDC similarity 5.8ms · sheaf diffusion 140ms per query
 
-### Track 3 — TLTS-compilation (NeSy 2026 submission)
+### Track 3 — TLTS-compilation (self-published preprint)
 
 Synthetic-prior harness over e-commerce Ologs, N=1000 trajectories per condition; full numbers in [Percepta_Transformer_VM/experiment_results.md](Percepta_Transformer_VM/experiment_results.md):
 
@@ -99,7 +99,7 @@ structure_of_clear_thinking/
 │
 ├── papers/                       # Publications
 │   ├── tlts_compilation.md       #   Extended working draft
-│   └── nesy_submission/          #   NeSy 2026 package (tex + supplementary)
+│   └── nesy_submission/          #   TLTS-Compilation preprint (tex + supplementary)
 │
 ├── scripts/                      # Runners
 │   ├── attention_ablation_experiment.py
@@ -112,7 +112,7 @@ structure_of_clear_thinking/
 ├── results/                      # Headline artifacts (ablation JSON/figures, reports)
 ├── docs/                         # Architecture, evaluation, strategy, design notes
 ├── handoffs/                     # Collaboration handoff documents (01–08 + early)
-├── blog/                         # "Structure of Clear Thinking" series (posts 0–5)
+├── blog/                         # "Structure of Clear Thinking" series (posts 0–8)
 ├── blog_handoff_oasis_cloud/     # Publish-synced copy + schedule
 ├── eval/                         # Evaluation memos
 └── prior_explorations/           # Earlier related work (chunking, structured output)
@@ -141,8 +141,8 @@ GPU experiments (HDC/Sheaf training, fine-tuning) run on [Modal](https://modal.c
 
 ## Writing
 
-- **Paper**: *TLTS-Compilation: A Neurosymbolic Framework for Type-Safe and Verifiable Transformers* — NeSy 2026 (see `papers/nesy_submission/SUBMISSION_METADATA.md`)
-- **Blog series** (`blog/`): 0 — Structure of Clear Thinking · 1 — Why Your LLM Hallucinates · 2 — Attention, But Make It Type-Safe · 3 — From Proofs to Programs to… Text? · 4 — Building an Auditable AI · 5 — Compiling Programs into Attention
+- **Paper**: *TLTS-Compilation: A Neurosymbolic Framework for Type-Safe and Verifiable Transformers* — self-published preprint, `papers/nesy_submission/main.pdf`. Prepared for NeSy 2026 but never submitted (upload failed; organizers did not respond). It predates the fine-tuning results in threads 03–05 and blog posts 06–08.
+- **Blog series** (`blog/`): 0 — Structure of Clear Thinking · 1 — Why Your LLM Hallucinates · 2 — Attention, But Make It Type-Safe · 3 — From Proofs to Programs to… Text? · 4 — Building an Auditable AI · 5 — Compiling Programs into Attention · 6 — Teaching the Model the Rulebook · 7 — The Map Is Not the Mechanism · 8 — Kill Your Favorite Result
 - **X thread series** (`threads/`): accessible result write-ups with self-contained figures — see [threads/README.md](threads/README.md) for the series plan
 - **Key docs**: [ARCHITECTURE.md](docs/ARCHITECTURE.md) · [PUBLICATION_STRATEGY.md](docs/PUBLICATION_STRATEGY.md) · [EPISTEMIC_STATUS_BRIDGE.md](docs/EPISTEMIC_STATUS_BRIDGE.md) · [FINETUNING_STRATEGY.md](docs/FINETUNING_STRATEGY.md)
 
@@ -153,10 +153,11 @@ GPU experiments (HDC/Sheaf training, fine-tuning) run on [Modal](https://modal.c
 ## Citation
 
 ```bibtex
-@inproceedings{lee2026tlts,
+@misc{lee2026tlts,
   title={TLTS-Compilation: A Neurosymbolic Framework for Type-Safe and Verifiable Transformers},
   author={Lee, Michael},
-  booktitle={Proceedings of the 20th International Conference on Neurosymbolic Learning and Reasoning (NeSy)},
-  year={2026}
+  year={2026},
+  note={Preprint},
+  howpublished={\url{https://github.com/MikeHLee/structure_of_clear_thinking}}
 }
 ```

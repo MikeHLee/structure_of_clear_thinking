@@ -155,7 +155,7 @@ GPU experiments (HDC/Sheaf training, fine-tuning) run on [Modal](https://modal.c
 ```bibtex
 @misc{lee2026tlts,
   title={TLTS-Compilation: A Neurosymbolic Framework for Type-Safe and Verifiable Transformers},
-  author={Lee, Michael},
+  author={Lee, Mike H},
   year={2026},
   note={Preprint},
   howpublished={\url{https://github.com/MikeHLee/structure_of_clear_thinking}}

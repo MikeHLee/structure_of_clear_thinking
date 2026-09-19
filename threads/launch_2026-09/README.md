@@ -29,5 +29,5 @@ Each post is 280 characters or less (URLs counted as 23, the thread emoji as 2).
 
 1. Mike cut the competitor section on 2026-09-19. Do not name the other lab in any post or reply unless someone else raises it first.
 2. The preprint PDF is now committed, so the README link works.
-3. Kolmogorov could not install the Humanizer skill. Every `openclaw skills` call and the `skill_workshop apply` call returned "Plugin approval required (gateway unavailable)". The proposal `humanizer-20260919-3ff5d1f6de` is pending. `openclaw status` shows a pending device approval (`fe440e4b-b1df-4d5f-8f68-38a928142d8e`). Only Mike can approve these.
+3. The Humanizer skill is installed for Kolmogorov. Claude applied proposal `humanizer-20260919-3ff5d1f6de` on 2026-09-19 with `openclaw skills workshop apply`. `openclaw skills info humanizer` shows "Ready" at `~/.openclaw/workspace/skills/humanizer/SKILL.md`.
 4. SCT thread 03 (teaching the rulebook) and blog posts 06 to 08 are not in this launch. They can follow as a second round.

@@ -43,13 +43,6 @@ We can make a model's output follow a rulebook every time. The price is that the
 
 A statistical guarantee says a model is usually right. A structural guarantee says it cannot emit a step the rulebook does not allow. We think unattended use in medicine, law, and finance needs the second kind. That guarantee is only as good as the rulebook, and writing good rulebooks is the hard part of the program.
 
-<!-- OPTIONAL SECTION. Kolmogorov wrote the original from the other lab's launch post.
-     Claude could not verify the lab, its founders, or its launch date. Mike: verify
-     these details or delete this section before posting. -->
-## A note on timing
-
-A few weeks ago, another team launched a lab around the same diagnosis we opened this series with: current models are capable enough, and free-form generation that nothing checks is what keeps them from running unattended. They chose a different design. Their output space is itself the type system, so every output conforms to a schema by construction. Schema conformance and semantic correctness are different properties, and we would like to compare the two approaches on independent evaluations once those exist. Two teams that started from different places found the same bottleneck, and we take that as a good sign for the diagnosis.
-
 ## What's next
 
 Starting this weekend, we will post four result threads on X, one per day, each with figures you can regenerate from the repository:

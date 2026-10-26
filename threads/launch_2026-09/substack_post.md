@@ -27,7 +27,7 @@ Standard attention lets any token attend to any other token, whether or not the 
 
 ### A structural contradiction detector
 
-We compute sheaf cohomology, a tool from algebraic topology, over knowledge graphs to find internal inconsistency. When we injected 76 conflicts into a clean benchmark subgraph, the first cohomology dimension (H¹) rose from 5 to 58. H¹ is computed directly from the graph, with no trained classifier. The same pipeline reaches a mean reciprocal rank of 0.346 for link prediction on FB15K-237, in the range reported for ConvE and RotatE.
+We compute sheaf cohomology, a tool from algebraic topology, over knowledge graphs to find internal inconsistency. ~~When we injected 76 conflicts into a clean benchmark subgraph, the first cohomology dimension (H¹) rose from 5 to 58. [...] The same pipeline reaches a mean reciprocal rank of 0.346 for link prediction on FB15K-237, in the range reported for ConvE and RotatE.~~ **Corrected 2026-10-23:** this H¹ counts cycles: 76 harmless edges raise it by +54, the same as the conflicts, and it flagged none of them; the MRR was tail-only and unfiltered, so it is not comparable to ConvE or RotatE.
 
 ### Soundness by construction (TLTS-Compilation)
 

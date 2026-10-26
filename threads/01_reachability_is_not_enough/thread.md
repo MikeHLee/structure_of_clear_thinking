@@ -24,8 +24,8 @@ What DID work gets 100% valid output — guaranteed. 🧵
 
 > **Alt text**: Bar chart titled "Only checking every step guarantees
 > rule-following output." For a well-calibrated model: no enforcement 48.1%,
-> reachability masking 61.5%, per-step rule check 100%. For a mis-calibrated
-> model: 4.2%, 4.3%, and 100%. The per-step check is labeled "guaranteed by
+> reachability masking 63.3%, per-step rule check 100%. For a mis-calibrated
+> model: 4.2%, 4.5%, and 100%. The per-step check is labeled "guaranteed by
 > construction."
 
 ## Post 2 — the setup
@@ -62,7 +62,7 @@ We generated 1,000 action sequences per condition and counted how many
 contained zero illegal steps:
 
 • No enforcement: 48% (good model) / 4% (bad model)
-• Reachability masking: 61.5% / 4.3%
+• Reachability masking: 63.3% / 4.5% (corrected 2026-10-21 from 61.5% / 4.3%; 10-seed mean)
 • Check every step against the rulebook: 100% / 100%
 
 That last row isn't luck. It's enforced at generation time.
@@ -79,7 +79,7 @@ Per-step checks are immune. Topology doesn't touch them.
 > **Alt text**: Slope chart titled "Add loops to the rulebook and reachability
 > masking stops working." Between a loop-free rulebook (34.7% of pairs
 > reachable) and a loopy one (100% reachable), reachability masking falls
-> from 65% to 8% and no-enforcement falls from 48% to 7%, while the per-step
+> from 63% to 7% and no-enforcement falls from 48% to 6%, while the per-step
 > rule check stays flat at 100%.
 
 ## Post 6 — it holds in the real layer  📎 fig4_attention_mass.png

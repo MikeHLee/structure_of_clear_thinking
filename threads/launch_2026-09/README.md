@@ -18,7 +18,7 @@ Each post is 280 characters or less (URLs counted as 23, the thread emoji as 2).
 ## Fact corrections to the 2026-09-18 drafts
 
 1. NeSy 2026. The drafts said the abstract and paper deadlines were met and notifications arrived July 8. The OpenReview upload never happened, and the paper is now a self-published preprint (`.swarm/state.md`, SCT-007 closed 2026-09-18). The kickoff tweet and the Substack timeline now say this.
-2. Reachability masking. The draft said masking "didn't move the needle". Masking raised valid sequences from 48.1% to 61.5% for the well-calibrated model and from 4.2% to 4.3% for the mis-calibrated model (`Percepta_Transformer_VM/experiment_results.md`).
+2. Reachability masking. The draft said masking "didn't move the needle". Masking raised valid sequences from 48.1% to 63.3% for the well-calibrated model and from 4.2% to 4.5% for the mis-calibrated model (corrected 2026-10-21; the first draft said 61.5% / 4.3%, a single hash-seed-dependent draw) (`Percepta_Transformer_VM/experiment_results.md`).
 3. H¹ contradiction test. The draft placed the 5 to 58 result on FB15K-237 and WN18RR. The report gives it for a separate clean subgraph (`results/week4_evaluation_report.md`, conflict detection table).
 4. "Hallucinations architecturally impossible." The guarantee covers rule compliance under the rulebook in force. The copy now says that.
 5. Epistemic-status gate. The code and tests exist. Nobody has tested the gate on a trained model, so the copy now says so.

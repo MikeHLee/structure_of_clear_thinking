@@ -94,8 +94,8 @@ blog_handoff_oasis_cloud/
 |--------|--------|--------|
 | Ontological attention firewall | Invalid-token weight: 0.213 → 0.000 | `results/attention_ablation.json` |
 | Attention v2 (300 epochs) | Invalid-token weight: 0.295 → 0.000 | `results/attention_ablation_v2.json` |
-| Contradiction detection (H¹) | +53 with 76 injected conflicts | `results/week4_evaluation_report.md` |
-| Link prediction MRR | 0.3459 on FB15K-237 | `docs/EVALUATION_SUMMARY_HDC_SHEAF.md` |
+| ~~Contradiction detection (H¹)~~ | RETRACTED 2026-10-23 (H¹ counts cycles; harmless edges give +54) | `results/week4_evaluation_report.md` |
+| Link prediction MRR | 0.3459 on FB15K-237 (tail-only, unfiltered; not comparable to baselines) | `docs/EVALUATION_SUMMARY_HDC_SHEAF.md` |
 | Separation ratio | 2.71× (easy negatives) | `handoffs/EMBEDDING_RESEARCH_MASTER_PLAN.md` |
 
 ---

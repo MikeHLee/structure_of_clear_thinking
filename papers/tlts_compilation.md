@@ -495,8 +495,10 @@ reachable from the current state — produces a striking result:
 
 | Prior | (A)   | (B′)  | (C)   | (D)   |
 |-------|-------|-------|-------|-------|
-| GOOD  | 48.1% | 61.5% | 100%  | 100%  |
-| BAD   |  4.2% |  4.3% | 100%  | 100%  |
+| GOOD  | 48.1% | 63.3%† | 100%  | 100%  |
+| BAD   |  4.2% |  4.5%† | 100%  | 100%  |
+
+† Erratum 2026-10-21: the published (B′) value (61.5% / 4.3%) was one draw that depended on `PYTHONHASHSEED`; corrected values are 10-seed means with sorted label sets (good prior range 60.8–65.1%). See oasis-main/alignment_research `tlts_compilation/AUDIT_2026-10-21.md`.
 
 (B′) is barely better than (A). Reachability admits the *destination*
 without requiring the *step* to exist as a δ-edge: from a current

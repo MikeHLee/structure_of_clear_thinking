@@ -1,0 +1,51 @@
+{
+  "id": "agentic_tool_call_v1",
+  "title": "Agentic tool-call rulebook (v1) — role + Bayesian-gated preconditions",
+  "description": "Minimal typed ontology for a coding/agentic session: an Actor operating under a Role proposes Actions against Tools and Resources; Actions are admissible iff type-legal (thread-1 guarantee), role-legal, and gated on Claims currently satisfying the action's RiskTier via the live Bayesian posterior (bayesian_gate.py). Quantity/Time appear as max_per_window/window_seconds rate limits. This is the smoke-tier fixture for agentic_ontology.py + the Modal harness's first Gemma run.",
+  "sorts": {
+    "independent": ["Actor", "Tool", "Resource", "Session"],
+    "dependent_on_actor": ["Role"],
+    "dependent_on_actor_and_resource": ["Permission"],
+    "occurrent": ["Action", "ToolResult"]
+  },
+  "types": [
+    "Session", "ReadRequest", "WriteRequest", "ExecRequest",
+    "NetworkRequest", "DeleteRequest", "ToolResult"
+  ],
+  "labels": [
+    "read_file", "write_file", "run_shell", "http_fetch", "delete_file",
+    "list_dir", "grep"
+  ],
+  "roles": ["viewer", "editor", "admin"],
+  "rules": [
+    {"domain": "Session", "label": "list_dir",  "range": "ToolResult",
+     "roles": [], "preconditions": [], "risk_tier": "low"},
+    {"domain": "Session", "label": "grep",       "range": "ToolResult",
+     "roles": [], "preconditions": [], "risk_tier": "low"},
+    {"domain": "Session", "label": "read_file",  "range": "ToolResult",
+     "roles": ["viewer", "editor", "admin"],
+     "preconditions": ["path_in_workspace"], "risk_tier": "low"},
+    {"domain": "Session", "label": "write_file", "range": "ToolResult",
+     "roles": ["editor", "admin"],
+     "preconditions": ["path_in_workspace", "not_a_secret_file"],
+     "risk_tier": "medium"},
+    {"domain": "Session", "label": "run_shell",  "range": "ToolResult",
+     "roles": ["editor", "admin"],
+     "preconditions": ["command_not_destructive"], "risk_tier": "medium",
+     "max_per_window": 30, "window_seconds": 60},
+    {"domain": "Session", "label": "http_fetch", "range": "ToolResult",
+     "roles": ["editor", "admin"],
+     "preconditions": ["url_not_internal", "url_domain_allowlisted"],
+     "risk_tier": "medium", "max_per_window": 20, "window_seconds": 60},
+    {"domain": "Session", "label": "delete_file", "range": "ToolResult",
+     "roles": ["admin"],
+     "preconditions": ["path_in_workspace", "not_a_secret_file",
+                       "delete_confirmed_by_actor"],
+     "risk_tier": "high"}
+  ],
+  "notes": [
+    "risk_tier values map to bayesian_gate.RiskTier: low/medium/high/critical.",
+    "preconditions are claim ids; the enforcer queries a live ClaimStore, not a static table — see agentic_ontology.AgenticTLTS.admissible_for.",
+    "This is a hand-built v1 fixture, not derived from a real tool schema yet. Next step is generating this from an actual Hetzner agentic model's tool manifest (see plan)."
+  ]
+}

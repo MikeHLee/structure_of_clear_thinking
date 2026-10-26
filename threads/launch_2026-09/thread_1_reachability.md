@@ -43,7 +43,7 @@ Real rulebooks have loops: a Delivery leads back to a Customer. With loops, near
 
 The step check works the same whatever the shape of the rulebook.
 
-Alt text: Slope chart titled "Add loops to the rulebook and reachability masking stops working." From a rulebook without loops (34.7% of pairs reachable) to one with loops (100% reachable), reachability masking falls from 65% to 8% and no enforcement falls from 48% to 7%. The per-step rule check stays at 100%.
+Alt text: Slope chart titled "Add loops to the rulebook and reachability masking stops working." From a rulebook without loops (34.7% of pairs reachable) to one with loops (100% reachable), reachability masking falls from 63% to 7% and no enforcement falls from 48% to 6% (corrected 2026-10-21). The per-step rule check stays at 100%.
 
 ## Post 6  [attach: fig4_attention_mass.png]
 

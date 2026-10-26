@@ -145,8 +145,8 @@ def fig2_soundness():
     scenarios = ["Model already knows the domain well\n(well-calibrated)",
                  "Model has wrong habits\n(mis-calibrated)"]
     data = {  # method -> (well, mis)
-        "No rule enforcement": (48.1, 4.2),
-        "Reachability masking": (63.3, 4.5),  # erratum 2026-10-21 (was 61.5, 4.3)
+        "No rule enforcement": (48.3, 4.5),
+        "Reachability masking": (63.3, 4.5),
         "Per-step rule check": (100.0, 100.0),
     }
 
@@ -181,7 +181,7 @@ def fig2_soundness():
     ax.spines[["top", "right", "left"]].set_visible(False)
     ax.legend(loc="upper left", bbox_to_anchor=(0.0, 1.02), frameon=False,
               fontsize=11.5, ncol=1)
-    footer(fig, "N=1,000 trajectories per condition, seed 42 · experiment_loci_comparison.py · github.com/MikeHLee/structure_of_clear_thinking")
+    footer(fig, "N=1,000 trajectories per condition, mean of seeds 42-51 · audit 2026-10-21 · github.com/MikeHLee/structure_of_clear_thinking")
     fig.savefig(os.path.join(OUT, "fig2_soundness_by_method.png"),
                 bbox_inches="tight")
     plt.close(fig)
@@ -194,8 +194,8 @@ def fig3_cycles():
     fig.subplots_adjust(top=0.80, bottom=0.12, left=0.09, right=0.80)
 
     pts = {  # method -> (acyclic, cyclic)
-        "No rule enforcement": (48.3, 6.2),   # erratum 2026-10-21 (was 48.1, 6.9)
-        "Reachability masking": (63.3, 6.6),  # erratum 2026-10-21 (was 65.0, 8.0)
+        "No rule enforcement": (48.3, 6.2),
+        "Reachability masking": (63.3, 6.6),
         "Per-step rule check": (100.0, 100.0),
     }
     label_y = {  # dodge the overlapping 7%/8% end labels

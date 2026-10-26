@@ -7,11 +7,11 @@ Figures: `threads/01_reachability_is_not_enough/figures/`
 
 We tested the usual way to stop an AI from taking illegal actions: block what the rulebook marks unreachable.
 
-It helped a little. When the model had bad habits, it did nothing (4.2% valid without it, 4.3% with it).
+It helped a little. When the model had bad habits, it did nothing (4.5% valid with or without it).
 
 Checking every step against the rulebook gave 100%. 🧵
 
-Alt text: Bar chart titled "Only checking every step guarantees rule-following output." For a well-calibrated model: no enforcement 48.1%, reachability masking 63.3%, per-step rule check 100%. For a mis-calibrated model: 4.2%, 4.5%, and 100%. The per-step check is labeled "guaranteed by construction."
+Alt text: Bar chart titled "Only checking every step guarantees rule-following output." For a well-calibrated model: no enforcement 48.3%, reachability masking 63.3%, per-step rule check 100%. For a mis-calibrated model: 4.5%, 4.5%, and 100%. The per-step check is labeled "guaranteed by construction."
 
 ## Post 2
 
@@ -31,19 +31,19 @@ Alt text: Diagram titled "A reachable destination is not a legal move." Boxes fo
 
 ## Post 4
 
-We generated 1,000 action sequences per condition and counted the ones with zero illegal steps.
+We generated 1,000 action sequences per condition, 10 seeds, and counted the ones with zero illegal steps.
 
-No enforcement: 48% (model knows the domain) / 4% (bad habits)
-Reachability masking: 63.3% / 4.5% (corrected 2026-10-21)
+No enforcement: 48% (model knows the domain) / 4.5% (bad habits)
+Reachability masking: 63% / 4.5%
 Checking each step against the rulebook: 100% / 100%
 
 ## Post 5  [attach: fig3_cyclic_collapse.png]
 
-Real rulebooks have loops: a Delivery leads back to a Customer. With loops, nearly every type can reach every other, so the mask blocks almost nothing. Its advantage over no enforcement drops from 17 points to 1.
+Real rulebooks have loops: a Delivery leads back to a Customer. With loops, every type can reach every other, so the mask blocks almost nothing. Its edge over no enforcement drops from 15 points to under 1.
 
 The step check works the same whatever the shape of the rulebook.
 
-Alt text: Slope chart titled "Add loops to the rulebook and reachability masking stops working." From a rulebook without loops (34.7% of pairs reachable) to one with loops (100% reachable), reachability masking falls from 63% to 7% and no enforcement falls from 48% to 6% (corrected 2026-10-21). The per-step rule check stays at 100%.
+Alt text: Slope chart titled "Add loops to the rulebook and reachability masking stops working." From a rulebook without loops (34.7% of pairs reachable) to one with loops (100% reachable), reachability masking falls from 63% to 7% and no enforcement falls from 48% to 6%. The per-step rule check stays at 100%.
 
 ## Post 6  [attach: fig4_attention_mass.png]
 

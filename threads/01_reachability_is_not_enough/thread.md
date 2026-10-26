@@ -17,15 +17,15 @@ image description field.
 We measured the "obvious" way to stop an AI from taking illegal actions —
 block anything unreachable in the rulebook.
 
-It barely helped. And when the model had bad habits, it did nothing at all
-(4.3% vs 4.2%).
+It helped a little. And when the model had bad habits, it did nothing at all
+(4.5% with or without it).
 
 What DID work gets 100% valid output — guaranteed. 🧵
 
 > **Alt text**: Bar chart titled "Only checking every step guarantees
-> rule-following output." For a well-calibrated model: no enforcement 48.1%,
+> rule-following output." For a well-calibrated model: no enforcement 48.3%,
 > reachability masking 63.3%, per-step rule check 100%. For a mis-calibrated
-> model: 4.2%, 4.5%, and 100%. The per-step check is labeled "guaranteed by
+> model: 4.5%, 4.5%, and 100%. The per-step check is labeled "guaranteed by
 > construction."
 
 ## Post 2 — the setup
@@ -61,8 +61,8 @@ doesn't make every square a legal next move.
 We generated 1,000 action sequences per condition and counted how many
 contained zero illegal steps:
 
-• No enforcement: 48% (good model) / 4% (bad model)
-• Reachability masking: 63.3% / 4.5% (corrected 2026-10-21 from 61.5% / 4.3%; 10-seed mean)
+• No enforcement: 48% (good model) / 4.5% (bad model)
+• Reachability masking: 63% / 4.5% (10-seed means; corrected 2026-10-21 from a single draw of 61.5% / 4.3%)
 • Check every step against the rulebook: 100% / 100%
 
 That last row isn't luck. It's enforced at generation time.

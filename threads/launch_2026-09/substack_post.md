@@ -31,7 +31,7 @@ We compute sheaf cohomology, a tool from algebraic topology, over knowledge grap
 
 ### Soundness by construction (TLTS-Compilation)
 
-The obvious fix is to mask attention so the model cannot see parts of the ontology it cannot reach. It helps less than we expected. In a synthetic test with 1,000 generated sequences per condition, reachability masking raised the share of fully valid sequences from 48% to 62% for a model that already knew the domain, and from 4.2% to 4.3% for one that did not. When the ontology has loops, as real domains do, most of that gain disappears. Checking every step against the rulebook during generation gave 100% valid sequences in both conditions. Each output also comes with a JSON audit certificate that anyone can re-check without access to the model. This is the subject of the preprint.
+The obvious fix is to mask attention so the model cannot see parts of the ontology it cannot reach. It helps less than we expected. In a synthetic test with 1,000 generated sequences per condition, averaged over 10 seeds, reachability masking raised the share of fully valid sequences from 48% to 63% for a model that already knew the domain, and left it at 4.5% for one that did not. When the ontology has loops, as real domains do, most of that gain disappears. Checking every step against the rulebook during generation gave 100% valid sequences in both conditions. Each output also comes with a JSON audit certificate that anyone can re-check without access to the model. This is the subject of the preprint.
 
 ### The epistemic-status bridge
 

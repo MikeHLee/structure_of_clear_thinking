@@ -22,6 +22,8 @@ PTVM = os.path.join(HERE, "..", "Percepta_Transformer_VM")
 ONTOLOGIES = os.path.join(HERE, "..", "training_data", "Text2KGBench",
                           "data", "dbpedia_webnlg", "ontologies")
 
+RULEBOOKS = os.path.join(HERE, "..", "rulebooks")
+
 app = modal.App("sct-constraint-ft")
 vol = modal.Volume.from_name("sct-constraint-ft", create_if_missing=True)
 
@@ -30,6 +32,8 @@ image = (
     .pip_install("torch", "transformers", "peft", "accelerate", "numpy")
     .add_local_dir(PTVM, remote_path="/root/ptvm")
     .add_local_dir(ONTOLOGIES, remote_path="/root/ontologies")
+    .add_local_dir(os.path.join(HERE, "..", "src"), remote_path="/root/src")
+    .add_local_dir(RULEBOOKS, remote_path="/root/rulebooks")
 )
 
 RESULTS_DIR = "/results"
@@ -254,6 +258,51 @@ def train_routing(seed: int = 42):
                       [h.strip() for h in HOLDOUTS.split(",")], seed=seed)
     vol.commit()
     return {"baseline": res["baseline"], "conditions": res["conditions"]}
+
+
+@app.function(image=image, cpu=8, memory=16384, timeout=3600,
+              volumes={RESULTS_DIR: vol})
+def smoke_agentic(rulebook_file: str = "agentic_tool_call_v1.json", role: str = "editor"):
+    """Tiny model, tiny counts — proves the role+Bayesian-precondition+
+    rate-limit enforcer end to end (agentic_ontology.py) before GPU spend.
+    Mirrors smoke()'s SmolLM2-135M/CPU tier exactly; only the rulebook and
+    measurement loop differ (experiment_agentic_ft.py instead of
+    experiment_constraint_ft.py)."""
+    import sys
+    sys.path.insert(0, "/root/ptvm")
+    sys.path.insert(0, "/root/src")
+    from experiment_agentic_ft import run
+    out = os.path.join(RESULTS_DIR, "smoke_agentic_results.json")
+    res = run(f"/root/rulebooks/{rulebook_file}", out,
+              model_name="HuggingFaceTB/SmolLM2-135M", role=role,
+              n_soundness_traj=25, max_calls=6)
+    vol.commit()
+    return {k: res[k] for k in ("model_name", "role", "soundness_enforcer_off",
+                                "denial_reasons_off", "config")}
+
+
+@app.function(image=image, gpu="L4", timeout=2 * 3600,
+              volumes={RESULTS_DIR: vol})
+def train_agentic(rulebook_file: str = "agentic_tool_call_v1.json",
+                  role: str = "editor",
+                  model_name: str = "google/gemma-3-270m"):
+    """Real model on the agentic tool-call rulebook. Gemma 3 270M by
+    default per the launch-2026-09 plan; pass model_name= to swap in
+    Qwen2.5-1.5B or Gemma 3 1B for comparison. Same measurement as
+    smoke_agentic, just n_soundness_traj scaled up to the thread-1
+    standard (300)."""
+    import sys
+    sys.path.insert(0, "/root/ptvm")
+    sys.path.insert(0, "/root/src")
+    from experiment_agentic_ft import run
+    slug = model_name.split("/")[-1]
+    out = os.path.join(RESULTS_DIR, f"agentic_ft_{slug}.json")
+    res = run(f"/root/rulebooks/{rulebook_file}", out,
+              model_name=model_name, role=role,
+              n_soundness_traj=300, max_calls=8)
+    vol.commit()
+    return {k: res[k] for k in ("model_name", "role", "soundness_enforcer_off",
+                                "denial_reasons_off", "config")}
 
 
 @app.function(image=image, volumes={RESULTS_DIR: vol})

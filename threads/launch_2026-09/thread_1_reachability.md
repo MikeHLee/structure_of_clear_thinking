@@ -11,7 +11,7 @@ It helped a little. When the model had bad habits, it did nothing (4.2% valid wi
 
 Checking every step against the rulebook gave 100%. 🧵
 
-Alt text: Bar chart titled "Only checking every step guarantees rule-following output." For a well-calibrated model: no enforcement 48.1%, reachability masking 61.5%, per-step rule check 100%. For a mis-calibrated model: 4.2%, 4.3%, and 100%. The per-step check is labeled "guaranteed by construction."
+Alt text: Bar chart titled "Only checking every step guarantees rule-following output." For a well-calibrated model: no enforcement 48.1%, reachability masking 63.3%, per-step rule check 100%. For a mis-calibrated model: 4.2%, 4.5%, and 100%. The per-step check is labeled "guaranteed by construction."
 
 ## Post 2
 
@@ -34,7 +34,7 @@ Alt text: Diagram titled "A reachable destination is not a legal move." Boxes fo
 We generated 1,000 action sequences per condition and counted the ones with zero illegal steps.
 
 No enforcement: 48% (model knows the domain) / 4% (bad habits)
-Reachability masking: 61.5% / 4.3%
+Reachability masking: 63.3% / 4.5% (corrected 2026-10-21)
 Checking each step against the rulebook: 100% / 100%
 
 ## Post 5  [attach: fig3_cyclic_collapse.png]

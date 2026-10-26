@@ -146,7 +146,7 @@ def fig2_soundness():
                  "Model has wrong habits\n(mis-calibrated)"]
     data = {  # method -> (well, mis)
         "No rule enforcement": (48.1, 4.2),
-        "Reachability masking": (61.5, 4.3),
+        "Reachability masking": (63.3, 4.5),  # erratum 2026-10-21 (was 61.5, 4.3)
         "Per-step rule check": (100.0, 100.0),
     }
 
@@ -194,8 +194,8 @@ def fig3_cycles():
     fig.subplots_adjust(top=0.80, bottom=0.12, left=0.09, right=0.80)
 
     pts = {  # method -> (acyclic, cyclic)
-        "No rule enforcement": (48.1, 6.9),
-        "Reachability masking": (65.0, 8.0),
+        "No rule enforcement": (48.3, 6.2),   # erratum 2026-10-21 (was 48.1, 6.9)
+        "Reachability masking": (63.3, 6.6),  # erratum 2026-10-21 (was 65.0, 8.0)
         "Per-step rule check": (100.0, 100.0),
     }
     label_y = {  # dodge the overlapping 7%/8% end labels

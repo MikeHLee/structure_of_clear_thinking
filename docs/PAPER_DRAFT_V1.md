@@ -1,3 +1,5 @@
+> **Correction (2026-10-23):** the H¹ conflict-detection result (+53 for 76 conflicts) in this file is retracted (this H¹ counts cycles; 76 harmless edges give +54), the MRR 0.346 is tail-only and unfiltered, and the 0.633 / 0.292 "consistency" scores are a density measure. See oasis-main/alignment_research `ISSUES.md`.
+
 # Ontological Induction: Grounding Language Generation in Categorical Proof Objects
 
 **Mike Lee**

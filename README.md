@@ -9,7 +9,7 @@ A research series on **neurosymbolic architectures for hallucination-free, audit
 | Track | Directory | Status | Key Result |
 |-------|-----------|--------|------------|
 | **1 — Ontological Induction Engine** (typed attention + proof engine) | `src/` | Core implementation + ablations complete | Typed attention drives invalid-pair attention mass from 0.295 → **0.000** with test accuracy at parity (47.4% vs 45.7%; 23-type ontology, 300 epochs) |
-| **2 — HDC/Sheaf Pipeline** (hyperdimensional encoding + cohomology) | `src/` (`ghrr_encoder`, `ontology_sheaf`, …) | Benchmarks complete (Modal A100) | FB15K-237 MRR **0.346** (competitive with ConvE ~0.325, RotatE ~0.338); H¹ cohomology detects injected conflicts (+53 dims for 76 conflicts) |
+| **2 — HDC/Sheaf Pipeline** (hyperdimensional encoding + cohomology) | `src/` (`ghrr_encoder`, `ontology_sheaf`, …) | Benchmarks complete (Modal A100) | Corrected 2026-10-23: the MRR 0.346 was tail-only and unfiltered (not comparable to ConvE/RotatE; re-evaluation pending), and the H¹ conflict-detection claim is retracted (see Track 2) |
 | **3 — TLTS-Compilation** (type-safe & verifiable transformers) | `Percepta_Transformer_VM/`, `papers/` | **Self-published preprint** (NeSy 2026 never submitted) | Constrained decoding: **100% trajectory soundness by construction** vs 4–48% unconstrained; reachability masking alone proven insufficient; JSON audit certificates re-checkable without model weights |
 | **4 — Epistemic-Status Bridge** (sourced vs unfalsifiable claims) | `src/epistemic_status.py`, `docs/` | Implemented, tests passing | SOURCED / FALSIFIABLE_UNSOURCED / UNFALSIFIABLE / UNKNOWABLE gate over (modality, provenance) — formalizes "reframe, don't assert" |
 | **Blog series** | `blog/` | Posts 0–8 drafted (6–8 pair with threads 03–05); distribution via X + Ghost/Substack, no venue schedule | "Structure of Clear Thinking" — hallucination, type-safe attention, proofs-to-text, auditable AI, compiled attention |
@@ -41,10 +41,10 @@ The type-derived mask zeroes attention to ontologically invalid pairs **by const
 
 Benchmarked on FB15K-237 (272K triples) and WN18RR (87K triples); details in [docs/EVALUATION_SUMMARY_HDC_SHEAF.md](docs/EVALUATION_SUMMARY_HDC_SHEAF.md) and [results/week4_evaluation_report.md](results/week4_evaluation_report.md):
 
-- **Link prediction** (A100, 50 epochs, 4096-dim hypervectors): MRR 0.346, Hits@10 0.524 — non-commutative HDC binding encodes directed relations at scale (~167M parameters)
+- **Link prediction** (A100, 50 epochs, 4096-dim hypervectors): MRR 0.346, Hits@10 0.524, **evaluated tail-only and unfiltered, so not comparable to published baselines** (corrected 2026-10-23; a filtered re-evaluation is pending)
 - **Hyperparameter sweep** (10 configs): 1024–2048 dims converge fastest at 30 epochs; diffusion time is performance-invariant
-- **Cohomology at scale**: exact O(n+m) sparse H⁰/H¹ (replacing O(n³) eigendecomposition); topological consistency scores match dataset structure (WN18RR 0.63 tree-like vs FB15K-237 0.29 cycle-dense)
-- **Conflict detection**: injecting 76 contradictions raises H¹ from 5 → 58 — cohomology dimension tracks inconsistency
+- **Cohomology at scale**: exact O(n+m) sparse H⁰/H¹ (replacing O(n³) eigendecomposition); the "consistency scores" (WN18RR 0.63 vs FB15K-237 0.29) equal 1 − (cycles ÷ edges), a density measure, not ontological consistency (corrected 2026-10-23)
+- ~~**Conflict detection**: injecting 76 contradictions raises H¹ from 5 → 58 — cohomology dimension tracks inconsistency~~ **Retracted 2026-10-23:** 76 harmless edges between the same type pairs raise H¹ by +54, the same as the conflicts (+53); the detector flagged 0 of 76. This H¹ counts cycles.
 - **Query latency**: BFS 0.5ms · HDC similarity 5.8ms · sheaf diffusion 140ms per query
 
 ### Track 3 — TLTS-compilation (self-published preprint)
@@ -54,8 +54,10 @@ Synthetic-prior harness over e-commerce Ologs, N=1000 trajectories per condition
 | Variant | Soundness (good prior) | Soundness (bad prior) |
 |---------|------------------------|----------------------|
 | (A) Unconstrained sampling | 48.1% | 4.2% |
-| (B′) Reachability masking | 61.5% | 4.3% |
+| (B′) Reachability masking | 63.3%† | 4.5%† |
 | (C) In-FFN gates / (D) logit masks | **100%** | **100%** |
+
+† Erratum 2026-10-21: the published (B′) value (61.5% / 4.3%) was one draw that depended on `PYTHONHASHSEED`; corrected values are 10-seed means with sorted label sets (good prior range 60.8–65.1%). See oasis-main/alignment_research `tlts_compilation/AUDIT_2026-10-21.md`.
 
 Findings that survived stress-testing:
 

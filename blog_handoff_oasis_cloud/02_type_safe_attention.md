@@ -379,9 +379,11 @@ the soundness rate by enforcement locus and prior quality:
 | Enforcement                                         | GOOD prior | BAD prior |
 |-----------------------------------------------------|-----------:|----------:|
 | (A) None — standard sampling from prior             |    48.1%   |    4.2%   |
-| (B′) Attention-layer reachability masking only      |    61.5%   |    4.3%   |
+| (B′) Attention-layer reachability masking only      |    63.3%†  |    4.5%†  |
 | (C) FFN-hybrid (deterministic where δ is functional)|   100.0%   |  100.0%   |
 | (D) Pre-decoder logit masking                       |   100.0%   |  100.0%   |
+
+† Erratum 2026-10-21: the published (B′) value (61.5% / 4.3%) was one draw that depended on `PYTHONHASHSEED`; corrected values are 10-seed means with sorted label sets (good prior range 60.8–65.1%). See oasis-main/alignment_research `tlts_compilation/AUDIT_2026-10-21.md`.
 
 Three things to take from this:
 

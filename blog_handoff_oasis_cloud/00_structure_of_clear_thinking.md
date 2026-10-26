@@ -69,7 +69,11 @@ We injected 76 deliberate conflicts into a clean subset. The cohomology dimensio
 | +76 conflicts | **58** | +53 points |
 | Increase | **+53** | Direct signal of contradictions |
 
-This isn't a classifier. It's a **structural invariant**: H¹ increases proportionally with injected inconsistencies. You can use it as a continuous "health meter" for knowledge integrity.
+> **Retracted 2026-10-23.** The H¹ computed here has no restriction maps; it is the type graph's
+> cycle count. Adding 76 *harmless* edges between the same type pairs raises it by +54, the same as
+> the 76 conflicts (+53), and the contradiction detector flagged 0 of the 76 conflicts. So this
+> experiment does not show contradiction detection. See oasis-main/alignment_research `ISSUES.md`
+> (2026-10-23).
 
 ---
 
